@@ -1,89 +1,101 @@
 <!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>정촉매와 부촉매의 작용 비교</title>
-<style>:root{--ink:#21363a;--muted:#4d6266;--green:#17665a;--rust:#a34b29;--purple:#614487;--line:#c7d5d3;font:16px/1.55 system-ui,"Malgun Gothic",sans-serif;color:var(--ink);background:#f3f6f5;color-scheme:light}*{box-sizing:border-box}body,h1,h2,h3,p{margin:0}main{max-width:1240px;margin:auto;padding:clamp(16px,3vw,36px)}header small{color:var(--green);font-weight:650}h1{font-size:clamp(26px,4vw,42px);line-height:1.2;margin:5px 0 8px;letter-spacing:-.05em}h2{font-size:20px;margin-bottom:8px}h3{font-size:16px}p{overflow-wrap:anywhere}.intro,.note{color:var(--muted)}.note{font-size:14px;margin-top:8px}.panel{border:1px solid var(--line);background:#fff;border-radius:9px;padding:clamp(12px,1.8vw,20px);margin-top:14px}.cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}.cols>*{min-width:0}.row{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px}.row label{display:inline-flex;align-items:center;gap:7px;flex-wrap:wrap}.top{background:#e8f2ed}.big{font-size:clamp(18px,2.5vw,26px);font-weight:700}.msg{margin-top:12px;border-left:4px solid #538a78;background:#edf4f0;padding:9px 12px}.actions{margin-top:10px}button,select,input{font:inherit}button,select{border:1px solid #a9bcb9;border-radius:5px;padding:5px 9px;color:inherit;background:white;cursor:pointer}button.primary,button[aria-pressed=true]{background:var(--green);color:white}button:disabled{opacity:.55;cursor:default}input[type=range]{accent-color:var(--green);max-width:100%}input[type=number]{width:8em;padding:4px;border:1px solid var(--line)}:focus-visible{outline:3px solid #ae691e;outline-offset:2px}a{color:var(--green)}svg{width:100%;height:auto;display:block;font:15px system-ui,sans-serif}svg text{fill:var(--ink)}table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}th,td{text-align:left;padding:6px;border-bottom:1px solid var(--line)}th{background:#eef3f2}.reaction{border-top:1px solid var(--line);padding:9px 0}.reaction p{margin:3px 0}.formula{font-weight:650}details{margin-top:12px}summary{cursor:pointer;font-weight:650}[hidden]{display:none!important}@media(max-width:720px){.cols{grid-template-columns:1fr;gap:0}main{padding:14px 10px}td,th{font-size:13px;padding:4px}.row{gap:6px}svg{font-size:17px}}</style></head><body><main><header><small>물질과 에너지 · 반응 속도</small><h1>정촉매와 부촉매의 작용 비교</h1><p class="intro">대체 경로를 열 때와 반응물 또는 활성점을 묶어 둘 때, 속도 변화의 원인을 구분하세요.</p></header>
-<section class="panel top"><h2>같은 출발 조건에서 비교하기</h2><div class="row">
-<label>온도 <select id="temp"><option>285</option><option selected>300</option><option>315</option><option>330</option></select> K</label>
-<label>억제제 결합 세기 × 자유 농도 (Kᵦ[I]) <input id="dose" type="range" min="0" max="9" value="3"><output id="doseVal"></output></label></div>
-<p class="note">모든 시료는 총 A 1.00 mol/L에서 출발합니다. 슬라이더 0은 억제제가 없는 대조 실험입니다.</p></section>
-<div class="cols"><section class="panel"><h2>시간에 따른 생성물 P</h2><svg id="productPlot" viewBox="0 0 540 260" role="img" aria-label="네 조건에서 시간에 따른 생성물 농도 곡선"></svg><label>관찰 시각 <input id="time" type="range" min="0" max="100" value="20"> <output id="timeVal"></output></label>
-<p class="note">아래 표나 조건 선택 버튼으로 곡선의 번호를 확인하세요. 번호는 서로 겹친 곡선에서도 같은 조건을 뜻합니다.</p></section>
-<section class="panel"><h2>초기 속도와 선택 시각의 농도</h2><table><thead><tr><th>실험 조건</th><th>초기 속도¹</th><th>무첨가 대비</th><th>[P]²</th></tr></thead><tbody id="measure"></tbody></table>
-<p class="note">¹ mol/(L·s)　² mol/L. 같은 온도에서 비교한 수업용 모형값입니다.</p><p id="comparison" class="msg" role="status"></p></section></div>
-<section class="panel"><h2>작용 원리와 에너지 경로</h2><div class="row" id="modes" aria-label="분석할 조건"></div>
-<label class="row actions">같은 반응의 열 출입 <select id="heat"><option value="-12">발열 · ΔH = −12 kJ/mol</option><option value="12">흡열 · ΔH = +12 kJ/mol</option></select></label>
-<div class="cols"><div><h3 class="actions" id="mechanismTitle"></h3><p id="mechanism"></p><p class="msg" id="available"></p><p class="note" id="formula"></p></div><div><svg id="path" viewBox="0 0 530 225" role="img" aria-label="선택 조건에서 반응에 참여하는 자유 A의 반응 경로와 엔탈피"></svg></div></div></section>
-<details class="panel"><summary>온도와 촉매를 바꿔 운동 에너지 분포 비교하기</summary><svg id="distribution" viewBox="0 0 560 195" role="img" aria-label="같은 온도에서의 운동 에너지 분포와 직접·촉매 경로의 기준선"></svg><p class="note">그래프는 자유 입자의 병진 운동 에너지 분포입니다. 위쪽에서 온도를 바꾸면 곡선이 이동합니다. 조건 ②·④를 선택하면 같은 곡선에 낮은 장벽 기준선이 추가됩니다. 기준선 너머 입자의 비율과 실제 반응 속도 사이에는 충돌 방향·활성점 수 등의 조건도 작용합니다.</p></details>
-<section class="panel"><h2>예측하고 검증하기</h2><p>같은 온도에서 억제제의 양을 늘려 촉매의 활성점을 거의 모두 막으면, ④의 속도는 어디에 가까워질까요?</p><div class="row actions" id="quiz"><button data-answer="zero">반응이 정지한다</button><button data-answer="base">① 무첨가의 속도</button><button data-answer="cat">② 정촉매의 속도</button></div><p id="response" class="note" role="status"></p></section>
-<details class="panel"><summary>모형 가정과 용어</summary><p>정촉매는 반응 과정에 참여하고 재생됩니다. 여기서 ‘부촉매’는 반응 속도를 감소시키는 억제제를 가리킵니다. IUPAC는 inhibitor라는 용어를 권합니다. 두 억제 모형은 각각 과량의 억제제가 자유 반응물 또는 촉매 활성점에 빠르게 가역 결합한다고 가정합니다. 사슬 반응 중간체를 제거하는 억제제 등은 다른 메커니즘을 따릅니다.</p><p>관찰 구간에서 역반응을 무시한 유사 1차 모형이며 [P](t) = [A]₀(1 − exp(−k관측 t))입니다. 무첨가 경로와 열린 촉매 경로의 속도 상수는 300 K에서 각각 0.020, 0.080 s⁻¹입니다. 온도에 따른 변화는 각 경로의 모형 활성화 에너지(40, 24 kJ/mol)로 계산합니다. 온도를 비교할 때 Kᵦ[I]는 지정한 값으로 고정합니다. 선택한 발열·흡열 예시에서 각 경로의 출발·도착 엔탈피는 같습니다. 정방향 장벽과 속도 상수는 유지하고 생성물의 엔탈피만 바꿔 비교합니다.</p><p><a href="https://goldbook.iupac.org/terms/view/C00876">IUPAC · 촉매</a> · <a href="https://goldbook.iupac.org/terms/view/I03035">억제제</a></p></details>
+<style>:root{--ink:#21363a;--muted:#4d6266;--green:#17665a;--rust:#a34b29;--purple:#614487;--line:#c7d5d3;font:16px/1.55 system-ui,"Malgun Gothic",sans-serif;color:var(--ink);background:#f3f6f5;color-scheme:light}*{box-sizing:border-box}body,h1,h2,h3,p{margin:0}main{max-width:1240px;margin:auto;padding:clamp(16px,3vw,36px)}header small{color:var(--green);font-weight:650}h1{font-size:clamp(26px,4vw,42px);line-height:1.2;margin:5px 0 8px;letter-spacing:-.05em}h2{font-size:20px;margin-bottom:8px}h3{font-size:16px}p{overflow-wrap:anywhere}.intro,.note{color:var(--muted)}.note{font-size:14px;margin-top:8px}.panel{border:1px solid var(--line);background:#fff;border-radius:9px;padding:clamp(12px,1.8vw,20px);margin-top:14px}.cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}.cols>*{min-width:0}.row{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px}.row label{display:inline-flex;align-items:center;gap:7px;flex-wrap:wrap}.top{background:#e8f2ed}.big{font-size:clamp(18px,2.5vw,26px);font-weight:700}.msg{margin-top:12px;border-left:4px solid #538a78;background:#edf4f0;padding:9px 12px}.actions{margin-top:10px}button,select,input{font:inherit}button,select{border:1px solid #a9bcb9;border-radius:5px;padding:5px 9px;color:inherit;background:white;cursor:pointer}button.primary,button[aria-pressed=true]{background:var(--green);color:white}button:disabled{opacity:.55;cursor:default}input[type=range]{accent-color:var(--green);max-width:100%}input[type=number]{width:8em;padding:4px;border:1px solid var(--line)}:focus-visible{outline:3px solid #ae691e;outline-offset:2px}a{color:var(--green)}svg{width:100%;height:auto;display:block;font:15px system-ui,sans-serif}svg text{fill:var(--ink)}table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}th,td{text-align:left;padding:6px;border-bottom:1px solid var(--line)}th{background:#eef3f2}.reaction{border-top:1px solid var(--line);padding:9px 0}.reaction p{margin:3px 0}.formula{font-weight:650}details{margin-top:12px}summary{cursor:pointer;font-weight:650}[hidden]{display:none!important}@media(max-width:720px){.cols{grid-template-columns:1fr;gap:0}main{padding:14px 10px}td,th{font-size:13px;padding:4px}.row{gap:6px}svg{font-size:17px}}.lesson-tabs{display:flex;border-bottom:1px solid #b6c7c4;gap:5px;margin:16px 0 14px}.lesson-tabs button{border:0;border-radius:6px 6px 0 0;background:transparent;font-weight:700;padding:8px 22px;color:#415956}.lesson-tabs button[aria-selected=true]{color:#094f46;background:#e2eee9;box-shadow:inset 0 -3px #17695e}.lesson-frame{max-width:1030px; margin:auto}.board{border:1px solid #c6d4d1;background:white;border-radius:12px;padding:clamp(14px,2vw,26px);margin:12px 0}.board h2{font-size:clamp(21px,2.8vw,32px);line-height:1.3;letter-spacing:-.04em}.board p,.lesson-frame p{word-break:keep-all;overflow-wrap:break-word}.teach-note{color:#516665;font-size:14px}.teacher-controls{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:14px}.teacher-controls button{min-height:40px}.verdict{font-size:clamp(17px,2vw,24px);font-weight:700;background:#e8f3ee;color:#164d41;border-radius:6px;padding:10px 14px;margin-top:12px}.state-band{padding:8px 12px;background:#edf2f3;border-radius:6px;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}.state-band strong{font-size:clamp(18px,2vw,24px)}.h-routes{display:grid;grid-template-columns:1fr 1fr;gap:12px;text-align:center;margin:10px 0}.route{border:1px solid #c3d4ce;border-radius:8px;padding:10px 8px;background:#fbfcfb}.route h3{font-size:clamp(15px,2vw,21px)}.descent{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:130px}.leg{display:flex;align-items:center;justify-content:center;gap:6px;min-height:32px;font-weight:700;font-size:clamp(15px,1.8vw,22px);color:#126354}.leg:before{content:"↓";font-size:1.4em}.landing{background:#ebeff5;color:#364962;padding:3px 9px;border-radius:4px;font-weight:650}.total{border-top:1px solid #d1dfd9;padding-top:6px;font-weight:750}.spot{outline:3px solid #b96622;outline-offset:2px;border-radius:3px}.lesson-headnote{margin-bottom:10px;color:#4b625f}.vessels{display:grid;gap:12px;margin:16px 0}.vessel{display:grid;grid-template-columns:minmax(116px,1.2fr) 3fr minmax(72px,.7fr);align-items:center;gap:14px}.vessel h3{font-size:clamp(15px,1.9vw,21px)}.vessel small{display:block;color:#52665f}.vessel output{font-size:clamp(18px,2.3vw,28px);font-variant-numeric:tabular-nums;font-weight:750;color:#144f45;text-align:right}.barrel{position:relative;height:clamp(36px,5vw,54px);background:repeating-linear-gradient(90deg,transparent 0 calc(10% - 1px),#c8d6d2 calc(10% - 1px) 10%),#f4f7f6;border:2px solid #78938b;border-radius:4px}.gas{height:100%;background:#9acebb;border-right:4px solid #135e4b}.scale{display:flex;justify-content:space-between;font-size:12px}.clockline{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-weight:650}.clockline input{width:min(300px,65vw);max-width:100%}.clockline output{font-variant-numeric:tabular-nums}.data-plot{max-width:760px;margin:auto}.data-plot text{font-size:15px}@media(max-width:600px){.vessel{grid-template-columns:106px minmax(0,1fr) 62px;gap:7px}.h-routes{gap:6px}.route{padding:8px 4px}.state-band{gap:7px}.board{padding:13px 10px}.lesson-tabs{margin:11px 0}.descent{min-height:140px}.vessel small{font-size:12px}.lesson-frame .teach-note{font-size:13px}}</style></head><body><main><header><small>물질과 에너지 · 반응 속도</small><h1>정촉매와 부촉매의 작용 비교</h1></header><nav class="lesson-tabs" role="tablist" aria-label="수업 단계"><button id="tab-basic" role="tab" aria-controls="basic" aria-selected="true">기본</button><button id="tab-advanced" role="tab" aria-controls="advanced" aria-selected="false" tabindex="-1">심화 탐구</button></nav><section id="basic" role="tabpanel" aria-labelledby="tab-basic" class="lesson-frame"><div class="board">
+<h2>같은 시간 동안, 어디에서 산소가 가장 많이 모일까요?</h2><p class="lesson-headnote">같은 양과 농도의 과산화 수소수를 같은 온도에 두고, 넣는 물질만 바꿉니다.</p>
+<div class="clockline"><label for="class-time">반응 시간</label><input id="class-time" type="range" min="0" max="60" value="20" step="1"><output id="class-clock" for="class-time"></output></div>
+<div class="vessels" id="vessels"></div>
+<div class="teacher-controls"><button class="primary" id="play-basic">처음부터 재생</button><button id="finish-basic">반응이 끝나면?</button></div>
+<p class="verdict" id="class-reading" role="status"></p><p class="teach-note">막대 길이는 모인 산소의 부피입니다. 같은 온도·압력에서 비교한 수업용 모형값입니다.</p></div>
+<details><summary>반응식 보기</summary><p>2H₂O₂(aq) → 2H₂O(l) + O₂(g)</p></details></section>
+<section id="advanced" role="tabpanel" aria-labelledby="tab-advanced" hidden>
+<div class="panel top"><h2>속도가 다르면 농도 곡선과 반응 경로는 어떻게 달라질까요?</h2><p>기본 탭의 과산화 수소 분해를 그래프로 읽습니다. 같은 시간의 산소 발생량과 같은 양이 모일 때까지 걸린 시간을 비교하세요.</p>
+<div class="row actions"><label>모형 온도 <select id="temp"><option value="0">낮음</option><option selected value="1">기준</option><option value="2">높음</option></select></label><label>관찰 시각 <input id="time" type="range" min="0" max="100" value="20"> <output id="timeVal"></output></label></div></div>
+<div class="cols"><section class="panel"><h2>시간에 따른 산소 발생량</h2><svg id="productPlot" class="data-plot" viewBox="0 0 550 250" role="img" aria-label="시간에 따른 세 조건의 산소 발생량과 관찰 시각"></svg><p class="note">같은 시각에서 곡선의 기울기가 클수록 그 순간의 산소 발생 속도가 큽니다.</p></section>
+<section class="panel"><h2>세 조건의 측정값 비교</h2><table><thead><tr><th>조건</th><th>처음 속도<br>(mL/s)</th><th>선택 시각<br>(mL)</th><th>50 mL까지<br>(s)</th></tr></thead><tbody id="measure"></tbody></table><p id="comparison" class="msg"></p></section></div>
+<section class="panel"><h2>활성화 에너지와 반응 엔탈피</h2><div class="row" id="modes" aria-label="비교할 조건"></div><svg class="data-plot" id="path" viewBox="0 0 540 205" role="img" aria-label="무첨가와 선택한 조건의 에너지 장벽을 비교하는 교과서식 정성 모형"></svg><p id="mechanism" class="msg" role="status"></p>
+<p class="note">반응 속도 차이를 설명하는 정성 모형입니다. 곡선의 높이는 아이오딘화 칼륨이나 인산을 넣었을 때 측정한 활성화 에너지 값이 아닙니다.</p></section>
+<section class="panel"><h2>그래프로 설명하기</h2><p>세 조건에서 충분히 반응시켜 과산화 수소가 모두 분해됐을 때, 최종 산소량은 어떻게 될까요?</p><div class="row actions" id="quiz"><button data-pick="fast">정촉매에서 가장 많다</button><button data-pick="same">세 조건이 같다</button><button data-pick="slow">부촉매에서 가장 많다</button></div><p id="quiz-result" role="status"></p></section></section>
 </main><script>
 const $=id=>document.getElementById(id);
-const conditions=[
- {name:'① 무첨가',color:'#344a65',dash:'',title:'자유 반응물의 직접 반응',explain:'자유 A가 직접 P로 바뀝니다. 나머지 세 실험의 비교 기준입니다.',formula:'k관측 = k₀'},
- {name:'② 정촉매',color:'#116b55',dash:'9 3',title:'반응 후 재생되는 촉매',explain:'직접 반응과 함께 촉매를 거치는 대체 경로가 열립니다. 자유 A와 P의 엔탈피는 같게 유지되며, 추가 경로의 장벽이 더 낮습니다.',formula:'k관측 = k₀ + k촉매'},
- {name:'③ 부촉매 · A 결합',color:'#a34b29',dash:'3 3',title:'반응물 격리형 억제',explain:'A + I ⇌ AI. 결합체 AI는 P를 직접 만들지 못합니다. 결합하지 않은 A의 장벽은 그대로이고, 같은 총농도에서 자유 A의 비율이 줄어듭니다.',formula:'k관측 = f × k₀'},
- {name:'④ 정촉매 + 억제제',color:'#6a458b',dash:'11 3 2 3',title:'촉매 활성점 차단형 억제',explain:'억제제 I가 촉매의 활성점을 점유합니다. 열려 있는 자리에서의 장벽은 그대로이고 촉매 경로의 기여가 작아집니다. 직접 반응은 계속됩니다.',formula:'k관측 = k₀ + f × k촉매'}
+const cases=[
+  {name:'무첨가',sub:'아무것도 넣지 않음',color:'#435972',dash:'',k:.020},
+  {name:'정촉매',sub:'아이오딘화 칼륨',color:'#17665a',dash:'8 3',k:.080},
+  {name:'부촉매',sub:'인산',color:'#a54b2b',dash:'2 3',k:.008}
 ];
-let selected=1;
-function rateAt(ref,energy,temp){return ref*Math.exp(energy/0.00831446*(1/300-1/temp))}
-function product(k,t){return 1-Math.exp(-k*t)}
-function experiment(){
-  const temp=Number($('temp').value),binding=Number($('dose').value);
-  const fraction=1/(1+binding);
-  const base=rateAt(.020,40,temp),catalytic=rateAt(.080,24,temp);
-  return {fraction,base,rates:[base,base+catalytic,base*fraction,base+catalytic*fraction]};
-}
-function line(x1,y1,x2,y2,style){return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" '+style+'/>'}
-function label(x,y,value,anchor='middle'){return '<text x="'+x+'" y="'+y+'" text-anchor="'+anchor+'">'+value+'</text>'}
-function drawProduct(rates,t){
-  const x=t=>51+4.55*t,y=p=>207-157*p;
-  let svg=label(10,20,'[P] (mol/L)','start');
-  for(const n of [0,.25,.5,.75,1])svg+=line(51,y(n),506,y(n),'stroke="#d3dedb"')+label(46,y(n)+4,n,'end');
-  for(const n of [0,20,40,60,80,100])svg+=label(x(n),229,n);
-  svg+=label(506,254,'시간 (s)','end');
-  rates.forEach((k,i)=>{
-    const c=conditions[i],points=Array.from({length:101},(_,j)=>x(j)+','+y(product(k,j))).join(' ');
-    svg+='<polyline points="'+points+'" fill="none" stroke="'+c.color+'" stroke-width="'+(i===selected?4:2.5)+'" stroke-dasharray="'+c.dash+'"/>';
+const maxVolume=100;
+function volume(k,t){return maxVolume*(1-Math.exp(-k*t))}
+let basicTimer=0,finished=false;
+cases.forEach((c,i)=>{
+  const row=document.createElement('div');row.className='vessel';
+  row.innerHTML='<div><h3>'+c.name+'</h3><small>'+c.sub+'</small></div><div><div class="barrel" aria-hidden="true"><div class="gas" id="gas-'+i+'"></div></div><div class="scale" aria-hidden="true"><span>0</span><span>50</span><span>100 mL</span></div></div><output id="vol-'+i+'" aria-label="'+c.name+'의 산소 부피"></output>';
+  $('vessels').append(row);
+});
+function stopDemo(){clearInterval(basicTimer);basicTimer=0;$('play-basic').textContent='처음부터 재생'}
+function renderBasic(){
+  const t=Number($('class-time').value);
+  $('finish-basic').textContent=finished?'선택한 시각으로':'반응이 끝나면?';
+  $('class-clock').value=finished?'반응 완료':t+'초';
+  $('class-time').setAttribute('aria-valuetext',finished?'반응 완료':t+'초');
+  cases.forEach((c,i)=>{
+    const v=finished?maxVolume:volume(c.k,t);
+    $('gas-'+i).style.width=v+'%';$('gas-'+i).style.visibility=v===0?'hidden':'visible';
+    $('vol-'+i).value=Math.round(v)+' mL';
   });
-  svg+=line(x(t),35,x(t),207,'stroke="#647478" stroke-dasharray="3 3"');
-  const rate=rates[selected];
-  svg+='<circle cx="'+x(t)+'" cy="'+y(product(rate,t))+'" r="5" fill="'+conditions[selected].color+'"/>';
-  const labelX=Math.min(480,Math.max(75,x(t)+18));
-  $('productPlot').innerHTML=svg+label(labelX,Math.max(36,y(product(rate,t))-7),['①','②','③','④'][selected]);
+  $('class-reading').textContent=finished?'끝까지 분해되면 산소는 모두 100 mL입니다. 같은 양을 만드는 데 걸린 시간이 다릅니다.':t===0?'시작 전에는 세 조건 모두 산소가 0 mL입니다.':'같은 '+t+'초 동안 정촉매를 넣으면 산소가 더 빨리 모이고, 부촉매를 넣으면 더 천천히 모입니다.';
 }
-function drawPath(showCatalyst){
-  const y=h=>158-2.6*h;
-  const delta=Number($('heat').value);
-  function curve(peak){return 'M55 '+y(0)+'H101 C165 '+y(0)+' 180 '+y(peak)+' 255 '+y(peak)+' S368 '+y(delta)+' 420 '+y(delta)+' H490'}
-  let svg=label(12,20,'상대 엔탈피 (kJ/mol)','start')+'<path d="M42 32V197H498" fill="none" stroke="#869a93"/>';
-  svg+='<path d="'+curve(40)+'" fill="none" stroke="#344a65" stroke-width="3"/>'+label(255,y(40)-8,'직접 경로 · 40');
-  if(showCatalyst)svg+='<path d="'+curve(24)+'" fill="none" stroke="#116b55" stroke-dasharray="7 3" stroke-width="3"/>'+label(247,y(24)+21,'촉매 경로 · 24');
-  $('path').innerHTML=svg+label(82,y(0)-8,'A · 0')+label(450,y(delta)-8,'P · '+(delta>0?'+12':'−12'))+label(495,222,'반응 진행','end');
-}
-function drawDistribution(hasCatalyst){
-  const scale=.00831446*Number($('temp').value);
-  const x=e=>44+9*e,y=e=>149-580*2/Math.sqrt(Math.PI)*Math.sqrt(e)*Math.exp(-e/scale)/scale**1.5;
-  const coords=Array.from({length:251},(_,i)=>{const e=52*(i/250)**2;return x(e)+','+y(e)}).join(' ');
-  let svg=label(12,19,'상대 입자 밀도','start')+line(44,148,512,148,'stroke="#738a83"')+'<polyline points="'+coords+'" fill="none" stroke="#344a65" stroke-width="3"/>';
-  for(const [e,name] of [[40,'직접 40'],...(hasCatalyst?[[24,'촉매 24']]:[])])svg+=line(x(e),55,x(e),149,'stroke="#647478" stroke-dasharray="5 3"')+label(x(e),49,name);
-  for(const e of [0,10,20,30,40,50])svg+=label(x(e),169,e);
-  $('distribution').innerHTML=svg+label(512,191,'운동 에너지 (kJ/mol)','end');
-}
-function render(){
-  const {rates,base,fraction}=experiment(),t=Number($('time').value);
-  $('timeVal').value=t+' s';$('doseVal').value=$('dose').value;
-  $('measure').innerHTML=rates.map((k,i)=>'<tr><th style="color:'+conditions[i].color+'">'+conditions[i].name+'</th><td>'+k.toFixed(4)+'</td><td>'+(k/base).toFixed(2)+'배</td><td>'+product(k,t).toFixed(3)+'</td></tr>').join('');
-  $('comparison').textContent='③의 속도는 ①의 '+(100*rates[2]/base).toFixed(1)+'%, ④의 속도는 ②의 '+(100*rates[3]/rates[1]).toFixed(1)+'%입니다.';
-  const condition=conditions[selected];$('mechanismTitle').textContent=condition.title;$('mechanism').textContent=condition.explain;$('formula').textContent=condition.formula;
-  $('available').textContent=['직접 경로에 참여할 수 있는 A · 100%','열린 촉매 활성점 · 100%', '자유 A의 비율 f · '+(fraction*100).toFixed(1)+'%', '열린 활성점 비율 f · '+(fraction*100).toFixed(1)+'%'][selected];
-  $('modes').querySelectorAll('button').forEach((b,i)=>b.setAttribute('aria-pressed',String(i===selected)));
-  const hasCatalyst=selected===1||selected===3;
-  drawProduct(rates,t);drawPath(hasCatalyst);drawDistribution(hasCatalyst);
-}
-conditions.forEach((c,i)=>{const b=document.createElement('button');b.textContent=c.name;b.onclick=()=>{selected=i;render()};$('modes').append(b)});
-$('heat').onchange=$('temp').onchange=$('dose').oninput=$('time').oninput=render;
-$('quiz').onclick=e=>{
-  const b=e.target.closest('[data-answer]');if(!b)return;
-  $('response').textContent=b.dataset.answer==='base'?'맞습니다. 열린 활성점 비율이 0에 가까워지면 촉매 경로의 기여만 사라져 k관측은 k₀에 가까워집니다.':'④에서 억제제가 막는 대상은 촉매 활성점입니다. 남아 있는 직접 경로의 기여를 확인하세요.';
+$('class-time').oninput=()=>{stopDemo();finished=false;renderBasic()};
+$('finish-basic').onclick=()=>{stopDemo();finished=!finished;$('finish-basic').textContent=finished?'선택한 시각으로':'반응이 끝나면?';renderBasic()};
+$('play-basic').onclick=()=>{
+  if(basicTimer){stopDemo();return}
+  finished=false;$('class-time').value=0;renderBasic();$('play-basic').textContent='멈추기';
+  basicTimer=setInterval(()=>{const n=Number($('class-time').value)+1;$('class-time').value=n;renderBasic();if(n>=60)stopDemo()},180);
 };
-render();
+let selected=1;
+const lbl=(x,y,t,a='middle')=>'<text x="'+x+'" y="'+y+'" text-anchor="'+a+'">'+t+'</text>';
+function renderAdvanced(){
+  const factor=[.6,1,1.65][Number($('temp').value)],t=Number($('time').value);
+  const x=t=>51+4.6*t,y=v=>196-1.48*v;
+  let svg=lbl(8,22,'산소 부피 (mL)','start')+'<path d="M51 38V196H511" stroke="#708482" fill="none"/>';
+  [0,25,50,75,100].forEach(v=>{svg+='<path d="M51 '+y(v)+'H511" stroke="#d2ddda"/>'+lbl(47,y(v)+4,v,'end')});
+  [0,20,40,60,80,100].forEach(v=>{svg+=lbl(x(v),218,v)});
+  const rates=cases.map(c=>c.k*factor);
+  cases.forEach((c,i)=>{
+    const pts=Array.from({length:101},(_,j)=>x(j)+','+y(volume(rates[i],j))).join(' ');
+    svg+='<polyline fill="none" stroke-width="3" stroke="'+c.color+'" stroke-dasharray="'+c.dash+'" points="'+pts+'"/><circle cx="'+x(t)+'" cy="'+y(volume(rates[i],t))+'" r="4" fill="'+c.color+'"/>';
+  });
+  $('productPlot').innerHTML=svg+'<path d="M'+x(t)+' 35V196" stroke="#62756e" stroke-dasharray="3 3"/>'+lbl(511,245,'시간 (s)','end');
+  $('measure').innerHTML=cases.map((c,i)=>'<tr><th style="color:'+c.color+'">'+c.name+'</th><td>'+(100*rates[i]).toFixed(2)+'</td><td>'+volume(rates[i],t).toFixed(1)+'</td><td>'+(Math.log(2)/rates[i]).toFixed(1)+'</td></tr>').join('');
+  $('timeVal').value=t+' s';$('comparison').textContent='같은 50 mL를 모으는 데 걸리는 시간은 정촉매에서 가장 짧고, 부촉매에서 가장 깁니다.';
+  const levels=[79,109,52],curve=h=>'M63 135H110 C173 135 195 '+h+' 270 '+h+' S370 170 427 170H494';
+  let path=lbl(10,20,'상대 엔탈피','start')+'<path d="M45 32V177H507" fill="none" stroke="#71847f"/>';
+  path+='<path d="'+curve(levels[0])+'" fill="none" stroke="'+cases[0].color+'" stroke-width="3"/>'+lbl(265,levels[0]-8,'무첨가');
+  if(selected){const c=cases[selected];path+='<path d="'+curve(levels[selected])+'" fill="none" stroke="'+c.color+'" stroke-width="3" stroke-dasharray="'+c.dash+'"/>'+lbl(275,selected===1?levels[1]+20:levels[2]-8,c.name)}
+  $('path').innerHTML=path+lbl(100,128,'반응물')+lbl(459,162,'생성물')+lbl(500,201,'반응 진행','end');
+  $('mechanism').textContent=['무첨가 경로를 기준으로 봉우리의 높이를 비교하세요. 반응물에서 봉우리까지가 활성화 에너지입니다.','정촉매는 활성화 에너지가 낮은 경로를 제공합니다. 같은 온도에서 반응이 빨라집니다.','교과서의 단순 모형에서는 부촉매를 넣었을 때 반응의 장벽을 더 높게 나타냅니다. 같은 온도에서 반응이 느려집니다.'][selected]+' 반응물과 생성물이 같으므로 전체 ΔH는 같습니다.';
+  [...$('modes').children].forEach((b,i)=>b.setAttribute('aria-pressed',String(i===selected)));
+}
+cases.forEach((c,i)=>{const b=document.createElement('button');b.textContent=c.name;b.onclick=()=>{selected=i;renderAdvanced()};$('modes').append(b)});
+$('temp').onchange=$('time').oninput=renderAdvanced;
+$('quiz').onclick=e=>{const b=e.target.closest('[data-pick]');if(b)$('quiz-result').textContent=b.dataset.pick==='same'?'맞습니다. 출발한 과산화 수소의 양과 반응식이 같으므로 완전히 분해된 뒤의 산소량도 같습니다.':'기본 탭의 ‘반응이 끝나면?’을 눌러 세 조건의 산소량을 비교하세요.'};
+renderBasic();renderAdvanced();
+function displayLesson(){
+  const advanced=location.hash==='#advanced';
+  for(const name of ['basic','advanced']){
+    const active=(name==='advanced')===advanced,button=document.getElementById('tab-'+name);
+    document.getElementById(name).hidden=!active;
+    button.setAttribute('aria-selected',String(active));button.tabIndex=active?0:-1;
+  }
+  if(advanced && typeof stopDemo==='function')stopDemo();
+}
+for(const name of ['basic','advanced']){
+  const btn=document.getElementById('tab-'+name);
+  btn.onclick=()=>{if(location.hash!=='#'+name)location.hash=name;displayLesson()};
+  btn.onkeydown=e=>{
+    if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;
+    e.preventDefault();
+    const other=e.key==='Home'?'basic':e.key==='End'?'advanced':name==='basic'?'advanced':'basic';
+    const target=document.getElementById('tab-'+other);target.click();target.focus();
+  };
+}
+window.addEventListener('hashchange',displayLesson);displayLesson();
 </script></body></html>

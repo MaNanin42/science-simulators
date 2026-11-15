@@ -11,8 +11,8 @@ GitHub Pages용 단일 HTML 수업 자료 12종과 별도 저장소의 시뮬레
 ## 물질과 에너지 통합 시뮬레이터
 
 - `docs/reaction-pathways/index.html`에서 한 단계 반응과 두 단계 반응를 관리합니다. 기존 `activation-energy`, `two-step-enthalpy` 주소는 각각 해당 모드로 연결됩니다.
-- `docs/catalysis-inhibition/`은 정촉매의 대체 경로, 반응물 결합형 억제, 촉매 활성점 차단을 같은 초기 조건에서 비교합니다. 기존 반응 경로 주소의 `#catalyst`는 새 페이지로 연결됩니다.
-- 3단원은 `docs/hess-law/`에서 흑연·CO 및 액체 물·수증기 과제에서 상태·계수·예측 엔탈피를 검증하고 여러 경로의 합을, `docs/entropy-direction/`에서 입자 배치와 얼음·물의 자발적 변화 방향을 탐구합니다.
+- `docs/catalysis-inhibition/`은 기본 탭에서 과산화 수소 분해의 산소 발생량을 비교하고, 심화 탐구 탭에서 반응 속도 곡선과 활성화 에너지를 살펴봅니다. 기존 반응 경로 주소의 `#catalyst`는 새 페이지로 연결됩니다.
+- 3단원은 `docs/hess-law/`에서 기본 탭의 두 경로 그림과 심화 탐구 탭의 반응식 조합으로 헤스 법칙을, `docs/entropy-direction/`에서 입자 배치와 얼음·물의 자발적 변화 방향을 탐구합니다.
 - 4단원 `docs/reaction-rate-lab/`에서는 모형 실험 자료로 속도식을 추론하고 두 농도 곡선에서 1차 반응의 반감기를 읽습니다.
 - `docs/molecular-energy/index.html`에서 온도만 바꾸기와 조건 비교를 관리합니다. 두 모드가 K와 kJ/mol을 사용하며 기준선 이상의 예상 개수와 분율을 같은 분포로 계산합니다. 기존 `temperature-energy`, `gas-energy-distribution` 주소는 각각 해당 모드로 연결됩니다.
 - 구글시트에는 각 통합 폴더의 주소를 한 행씩 등록합니다. 첫 화면 생성 대상은 통합 시뮬레이터의 기본 모드입니다.
