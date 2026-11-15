@@ -5,9 +5,22 @@
 *{box-sizing:border-box}body,h1,h2,h3,p{margin:0}main{max-width:1120px;margin:auto;padding:clamp(16px,3vw,40px) clamp(12px,3vw,32px)}h1{font-size:clamp(27px,4vw,45px);letter-spacing:-.055em;line-height:1.25;margin:5px 0 8px}header small{font-weight:700;color:var(--teal)}header p,.note{color:var(--muted)}h2{font-size:clamp(18px,2vw,23px);margin-bottom:8px}h3{font-size:17px}button,select,input{font:inherit;accent-color:var(--teal)}button,select{padding:6px 10px;border:1px solid #a7bcb8;border-radius:6px;background:white;color:var(--ink);cursor:pointer}button[aria-pressed=true],button.primary{background:var(--teal);color:white;border-color:var(--teal)}button:disabled{opacity:.55;cursor:default}:focus-visible{outline:3px solid #b06c20;outline-offset:2px}[hidden]{display:none!important}
 .box{background:white;border:1px solid var(--border);border-radius:10px;padding:clamp(12px,2vw,22px);margin-top:14px}.cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}.cols>*{min-width:0}.row,.tabs{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}.tabs{margin:15px 0 6px}.row label{display:inline-flex;align-items:center;gap:6px}.status{background:#e9f2ee;border-radius:6px;padding:9px 12px;margin-top:12px;min-height:40px}.big{font-size:clamp(19px,2.5vw,28px);font-weight:700;letter-spacing:-.035em}.note{font-size:14px;margin-top:8px}svg{display:block;width:100%;height:auto}svg text{font-family:inherit;fill:var(--ink)}input[type=range]{max-width:100%}button:hover{border-color:var(--teal)}table{border-collapse:collapse;width:100%}td,th{padding:6px;text-align:center;border-bottom:1px solid var(--border)}th{background:#edf3f1}.actions{margin-top:10px}summary{cursor:pointer}a{color:var(--teal)}@media(max-width:680px){.cols{grid-template-columns:1fr;gap:0}main{padding-top:17px}.box{margin-top:10px}td,th{padding:4px;font-size:14px}}
 
-#reactor{background:#eff5f3;border:1px solid #abc2bb;border-radius:8px;padding:16px;min-height:70px;display:flex;gap:12px;align-content:center;align-items:center;flex-wrap:wrap;margin:14px 0 6px}#reactor i{display:inline-block;width:15px;height:15px;border-radius:50%;background:#117566}#reactor i.b{background:#ac512b;border-radius:2px;transform:rotate(45deg)}#curve{max-width:760px;margin:12px auto;cursor:crosshair}.actions select{font-variant-numeric:tabular-nums}</style></head><body><main><header><small>물질과 에너지 · 반응 속도</small><h1>반응 속도 데이터 실험실</h1><p>농도와 속도 자료에서 반응 차수를 찾고, 두 농도 곡선에서 반감기를 읽으세요.</p></header>
-<nav class="tabs" aria-label="탐구 선택"><button id="rateTab" aria-pressed="true">초기 속도로 속도식 찾기</button><button id="halfTab" aria-pressed="false">1차 반응의 반감기 읽기</button></nav>
-<section id="rate"><div class="cols"><section class="box"><h2>실험 조건 설계</h2><p>온도와 반응기 부피를 고정합니다. 한 번에 한 반응물의 초기 농도만 바꾼 실험 쌍을 만들어 보세요.</p>
+#reactor{background:#eff5f3;border:1px solid #abc2bb;border-radius:8px;padding:16px;min-height:70px;display:flex;gap:12px;align-content:center;align-items:center;flex-wrap:wrap;margin:14px 0 6px}#reactor i{display:inline-block;width:15px;height:15px;border-radius:50%;background:#117566}#reactor i.b{background:#ac512b;border-radius:2px;transform:rotate(45deg)}#curve{max-width:760px;margin:12px auto;cursor:crosshair}.actions select{font-variant-numeric:tabular-nums}.avg-board h2{font-size:clamp(22px,3vw,33px);line-height:1.28;letter-spacing:-.04em}.avg-board p,.avg-board button{word-break:keep-all}.avg-layout{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(220px,.8fr);gap:clamp(15px,3vw,38px);align-items:center;margin:18px 0}.avg-read{background:#f4f7f5;padding:16px;border-radius:7px}.avg-read label{display:flex;justify-content:space-between;gap:5px;font-weight:650}.avg-read output{font-variant-numeric:tabular-nums}.avg-read input{width:100%;margin:8px 0 16px}.avg-key{display:flex;justify-content:center;gap:20px;font-size:14px;color:#116455}.avg-key span+span{color:#86431e}#avg-plot{touch-action:pan-y;user-select:none}#avg-plot .handle{touch-action:none;cursor:grab}.avg-calculation{background:#eaf3ee;display:flex;align-items:center;justify-content:space-evenly;gap:8px;flex-wrap:wrap;padding:14px;border-radius:7px;text-align:center}.avg-calculation strong{display:block;font-size:clamp(17px,2.3vw,26px);font-variant-numeric:tabular-nums;color:#124e44}.avg-calculation>div{font-size:14px}.avg-calculation>b{color:#55756d}@media(max-width:680px){.avg-layout{grid-template-columns:1fr}.avg-calculation{gap:4px;padding:10px 4px}.avg-calculation strong{font-size:15px}.avg-calculation>div{font-size:13px}}
+</style></head><body><main><header><small>물질과 에너지 · 반응 속도</small><h1>반응 속도 데이터 실험실</h1><p>농도 곡선에서 평균 반응 속도를 읽고, 초기 속도와 반감기도 탐구해 보세요.</p></header>
+<nav class="tabs" aria-label="탐구 선택"><button id="averageTab" aria-pressed="true">두 점으로 평균 반응 속도 읽기</button><button id="rateTab" aria-pressed="false">초기 속도로 속도식 찾기</button><button id="halfTab" aria-pressed="false">1차 반응의 반감기 읽기</button></nav>
+<section id="average"><div class="box avg-board">
+<h2>같은 10초 동안, 언제 A가 더 많이 줄어들까요?</h2>
+<p>반응 A → B에서 두 점을 골라 보세요. 점을 잇는 직선이 가파를수록 그 구간에서 A가 빨리 줄어듭니다.</p>
+<div class="avg-layout"><div><svg id="avg-plot" viewBox="0 0 450 285" role="img" aria-label="시간에 따른 반응물 A의 농도와 두 점을 이은 직선"></svg>
+<div class="avg-key"><span>━ 농도 곡선</span><span>┄ 두 점을 이은 직선</span></div></div>
+<div class="avg-read"><label for="avg-start">시작점 P <output id="p-label"></output></label><input id="avg-start" type="range" min="0" max="39" value="0">
+<label for="avg-end">끝점 Q <output id="q-label"></output></label><input id="avg-end" type="range" min="1" max="40" value="10">
+<div class="row"><button data-start="0">처음 10초</button><button data-start="20">나중 10초</button></div>
+<p class="note">슬라이더를 움직이거나 그래프에서 각 점을 끌어 보세요.</p></div></div>
+<div class="avg-calculation" aria-live="polite"><div>농도 감소량<strong id="avg-drop"></strong></div><b>÷</b><div>걸린 시간<strong id="avg-span"></strong></div><b>=</b><div>평균 반응 속도<strong id="avg-answer"></strong></div></div>
+<p class="note" id="avg-math"></p><p class="note">반응식에서 A의 계수는 1입니다. 농도 변화량 Δ[A]가 음수이므로 평균 반응 속도는 −Δ[A]/Δt로 구합니다. 곡선은 반감기가 10초인 1차 반응의 모형입니다.</p>
+</div></section>
+<section id="rate" hidden><div class="cols"><section class="box"><h2>실험 조건 설계</h2><p>온도와 반응기 부피를 고정합니다. 한 번에 한 반응물의 초기 농도만 바꾼 실험 쌍을 만들어 보세요.</p>
 <div class="row actions"><label>[A]₀ <select id="a"></select> mol/L</label><label>[B]₀ <select id="b"></select> mol/L</label></div>
 <div id="reactor" aria-label="초기 농도에 비례한 모형 입자 수"></div><p class="note">같은 부피 안에서 원은 A, 마름모는 B입니다. 입자 수는 농도 비를 나타냅니다.</p><button class="primary actions" id="record">이 조건으로 측정</button></section>
 <section class="box"><h2>초기 속도 기록</h2><table><thead><tr><th>실험</th><th>[A]₀</th><th>[B]₀</th><th>초기 속도</th></tr></thead><tbody id="records"></tbody></table>
@@ -23,8 +36,8 @@ function options(id,values,initial){for(const v of values)$(id).add(new Option(v
 for(const id of ['a','b'])options(id,[0.5,1,2],1);
 for(const id of ['m','n'])options(id,['선택',0,1,2],'선택');
 for(const [id,initial] of [['c1',1],['c2',2]])options(id,[0.5,1,2],initial);
-for(const id of ['rate','half'])$(id+'Tab').onclick=()=>{
-  for(const other of ['rate','half']){$(other).hidden=other!==id;$(other+'Tab').setAttribute('aria-pressed',String(other===id))}
+for(const id of ['average','rate','half'])$(id+'Tab').onclick=()=>{
+  for(const other of ['average','rate','half']){$(other).hidden=other!==id;$(other+'Tab').setAttribute('aria-pressed',String(other===id))}
 };
 function showParticles(){
   const countA=4*Number($('a').value),countB=4*Number($('b').value);
@@ -92,4 +105,55 @@ $('curve').onclick=e=>{
   $('time').value=Math.round((point.matrixTransform(svg.getScreenCTM().inverse()).x-62)/13);draw();
 };
 $('time').oninput=draw;showParticles();renderTrials();draw();
+const avgPlot = $('avg-plot');
+const startInput = $('avg-start'), endInput = $('avg-end');
+const avgX = t => 58 + t * 9.2;
+const avgY = c => 229 - 175 * c;
+function drawAverage(){
+  const start = Number(startInput.value), end = Number(endInput.value);
+  const first = concentration(1,start), last = concentration(1,end);
+  const interval = end-start, drop = first-last;
+  const path = Array.from({length:81},(_,i)=>avgX(i/2)+','+avgY(concentration(1,i/2))).join(' ');
+  const x1 = avgX(start), x2 = avgX(end), y1 = avgY(first), y2 = avgY(last);
+  let svg = '<text x="8" y="22">[A] (mol/L)</text><text x="425" y="281" text-anchor="end">시간 (s)</text>';
+  for(let i=0;i<=4;i++){
+    const y = avgY(i/4), x = avgX(i*10);
+    svg += '<path d="M58 '+y+'H426" stroke="#cedbd5"/><text x="51" y="'+(y+5)+'" text-anchor="end">'+(i/4).toFixed(2)+'</text><text x="'+x+'" y="251" text-anchor="middle">'+(i*10)+'</text>';
+  }
+  svg += '<path d="M58 48V229H426" fill="none" stroke="#587269"/><path d="M'+x1+' '+y1+'H'+x2+'V'+y2+'Z" fill="#f5e2cf" stroke="#b68558" stroke-dasharray="3 3"/>';
+  svg += '<polyline points="'+path+'" stroke="#176a59" stroke-width="3" fill="none"/><path d="M'+x1+' '+y1+'L'+x2+' '+y2+'" fill="none" stroke="#944815" stroke-width="3" stroke-dasharray="6 4"/>';
+  for(const [key,label,x,y] of [['start','P',x1,y1],['end','Q',x2,y2]]){
+    svg += '<g class="handle" data-point="'+key+'"><circle cx="'+x+'" cy="'+y+'" r="15" fill="transparent"/><circle cx="'+x+'" cy="'+y+'" r="5" fill="#fff" stroke="#824019" stroke-width="3"/><text x="'+(x+(key==='start'?-6:6))+'" y="'+(y-11)+'" text-anchor="'+(key==='start'?'end':'start')+'">'+label+'</text></g>';
+  }
+  avgPlot.innerHTML=svg;
+  $('p-label').value=start+' s · '+first.toFixed(3)+' mol/L';
+  $('q-label').value=end+' s · '+last.toFixed(3)+' mol/L';
+  $('avg-drop').textContent=drop.toFixed(3)+' mol/L';
+  $('avg-span').textContent=interval+' s';
+  $('avg-answer').textContent=(drop/interval).toFixed(4)+' mol/(L·s)';
+  $('avg-math').textContent='P의 농도 '+first.toFixed(3)+'에서 Q의 농도 '+last.toFixed(3)+'을 빼면, '+interval+'초 동안 줄어든 A의 농도를 구할 수 있습니다.';
+  for(const btn of document.querySelectorAll('[data-start]'))btn.setAttribute('aria-pressed',String(Number(btn.dataset.start)===start && interval===10));
+}
+function moveAverage(which,t){
+  if(which==='start')startInput.value=Math.min(Number(endInput.value)-1,t);
+  else endInput.value=Math.max(Number(startInput.value)+1,t);
+  drawAverage();
+}
+for(const [input,key] of [[startInput,'start'],[endInput,'end']])input.oninput=()=>moveAverage(key,Number(input.value));
+for(const button of document.querySelectorAll('[data-start]'))button.onclick=()=>{
+  startInput.value=button.dataset.start;endInput.value=Number(button.dataset.start)+10;drawAverage();
+};
+let dragging=null;
+avgPlot.onpointerdown=e=>{
+  const handle=e.target.closest('.handle');
+  if(!handle)return;
+  dragging=handle.dataset.point;avgPlot.setPointerCapture(e.pointerId);e.preventDefault();
+};
+avgPlot.onpointermove=e=>{
+  if(!dragging)return;
+  const p=new DOMPoint(e.clientX,e.clientY).matrixTransform(avgPlot.getScreenCTM().inverse());
+  moveAverage(dragging,Math.round((p.x-58)/9.2));
+};
+avgPlot.onlostpointercapture=()=>{dragging=null};
+drawAverage();
 </script></body></html>

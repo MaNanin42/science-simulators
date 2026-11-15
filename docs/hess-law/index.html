@@ -1,7 +1,8 @@
 <!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>열화학 반응식과 헤스 법칙</title>
 <style>:root{--ink:#21363a;--muted:#4d6266;--green:#17665a;--rust:#a34b29;--purple:#614487;--line:#c7d5d3;font:16px/1.55 system-ui,"Malgun Gothic",sans-serif;color:var(--ink);background:#f3f6f5;color-scheme:light}*{box-sizing:border-box}body,h1,h2,h3,p{margin:0}main{max-width:1240px;margin:auto;padding:clamp(16px,3vw,36px)}header small{color:var(--green);font-weight:650}h1{font-size:clamp(26px,4vw,42px);line-height:1.2;margin:5px 0 8px;letter-spacing:-.05em}h2{font-size:20px;margin-bottom:8px}h3{font-size:16px}p{overflow-wrap:anywhere}.intro,.note{color:var(--muted)}.note{font-size:14px;margin-top:8px}.panel{border:1px solid var(--line);background:#fff;border-radius:9px;padding:clamp(12px,1.8vw,20px);margin-top:14px}.cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}.cols>*{min-width:0}.row{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px}.row label{display:inline-flex;align-items:center;gap:7px;flex-wrap:wrap}.top{background:#e8f2ed}.big{font-size:clamp(18px,2.5vw,26px);font-weight:700}.msg{margin-top:12px;border-left:4px solid #538a78;background:#edf4f0;padding:9px 12px}.actions{margin-top:10px}button,select,input{font:inherit}button,select{border:1px solid #a9bcb9;border-radius:5px;padding:5px 9px;color:inherit;background:white;cursor:pointer}button.primary,button[aria-pressed=true]{background:var(--green);color:white}button:disabled{opacity:.55;cursor:default}input[type=range]{accent-color:var(--green);max-width:100%}input[type=number]{width:8em;padding:4px;border:1px solid var(--line)}:focus-visible{outline:3px solid #ae691e;outline-offset:2px}a{color:var(--green)}svg{width:100%;height:auto;display:block;font:15px system-ui,sans-serif}svg text{fill:var(--ink)}table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}th,td{text-align:left;padding:6px;border-bottom:1px solid var(--line)}th{background:#eef3f2}.reaction{border-top:1px solid var(--line);padding:9px 0}.reaction p{margin:3px 0}.formula{font-weight:650}details{margin-top:12px}summary{cursor:pointer;font-weight:650}[hidden]{display:none!important}@media(max-width:720px){.cols{grid-template-columns:1fr;gap:0}main{padding:14px 10px}td,th{font-size:13px;padding:4px}.row{gap:6px}svg{font-size:17px}}.lesson-tabs{display:flex;border-bottom:1px solid #b6c7c4;gap:5px;margin:16px 0 14px}.lesson-tabs button{border:0;border-radius:6px 6px 0 0;background:transparent;font-weight:700;padding:8px 22px;color:#415956}.lesson-tabs button[aria-selected=true]{color:#094f46;background:#e2eee9;box-shadow:inset 0 -3px #17695e}.lesson-frame{max-width:1030px; margin:auto}.board{border:1px solid #c6d4d1;background:white;border-radius:12px;padding:clamp(14px,2vw,26px);margin:12px 0}.board h2{font-size:clamp(21px,2.8vw,32px);line-height:1.3;letter-spacing:-.04em}.board p,.lesson-frame p{word-break:keep-all;overflow-wrap:break-word}.teach-note{color:#516665;font-size:14px}.teacher-controls{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:14px}.teacher-controls button{min-height:40px}.verdict{font-size:clamp(17px,2vw,24px);font-weight:700;background:#e8f3ee;color:#164d41;border-radius:6px;padding:10px 14px;margin-top:12px}.state-band{padding:8px 12px;background:#edf2f3;border-radius:6px;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}.state-band strong{font-size:clamp(18px,2vw,24px)}.h-routes{display:grid;grid-template-columns:1fr 1fr;gap:12px;text-align:center;margin:10px 0}.route{border:1px solid #c3d4ce;border-radius:8px;padding:10px 8px;background:#fbfcfb}.route h3{font-size:clamp(15px,2vw,21px)}.descent{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:130px}.leg{display:flex;align-items:center;justify-content:center;gap:6px;min-height:32px;font-weight:700;font-size:clamp(15px,1.8vw,22px);color:#126354}.leg:before{content:"↓";font-size:1.4em}.landing{background:#ebeff5;color:#364962;padding:3px 9px;border-radius:4px;font-weight:650}.total{border-top:1px solid #d1dfd9;padding-top:6px;font-weight:750}.spot{outline:3px solid #b96622;outline-offset:2px;border-radius:3px}.lesson-headnote{margin-bottom:10px;color:#4b625f}.vessels{display:grid;gap:12px;margin:16px 0}.vessel{display:grid;grid-template-columns:minmax(116px,1.2fr) 3fr minmax(72px,.7fr);align-items:center;gap:14px}.vessel h3{font-size:clamp(15px,1.9vw,21px)}.vessel small{display:block;color:#52665f}.vessel output{font-size:clamp(18px,2.3vw,28px);font-variant-numeric:tabular-nums;font-weight:750;color:#144f45;text-align:right}.barrel{position:relative;height:clamp(36px,5vw,54px);background:repeating-linear-gradient(90deg,transparent 0 calc(10% - 1px),#c8d6d2 calc(10% - 1px) 10%),#f4f7f6;border:2px solid #78938b;border-radius:4px}.gas{height:100%;background:#9acebb;border-right:4px solid #135e4b}.scale{display:flex;justify-content:space-between;font-size:12px}.clockline{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-weight:650}.clockline input{width:min(300px,65vw);max-width:100%}.clockline output{font-variant-numeric:tabular-nums}.data-plot{max-width:760px;margin:auto}.data-plot text{font-size:15px}@media(max-width:600px){.vessel{grid-template-columns:106px minmax(0,1fr) 62px;gap:7px}.h-routes{gap:6px}.route{padding:8px 4px}.state-band{gap:7px}.board{padding:13px 10px}.lesson-tabs{margin:11px 0}.descent{min-height:140px}.vessel small{font-size:12px}.lesson-frame .teach-note{font-size:13px}}.cycle-figure{margin:10px 0 8px}.cycle-figure svg{display:block;width:100%;max-height:390px;font-family:inherit}.cycle-figure figcaption,.cycle-sum{display:flex;align-items:baseline;justify-content:center;flex-wrap:wrap;gap:0 .45em;text-align:center}.cycle-figure figcaption{font-weight:700;border-top:1px solid #d5dfdd;padding-top:10px}.direct-key{color:#096650}.via-key{color:#654493}.cycle-sum{font-size:clamp(16px,2.1vw,24px);font-weight:750}.cycle-figure .spot{outline:0}.path-halo{opacity:0;stroke:#ffd27c;stroke-width:13;fill:none}.spot .path-halo{opacity:1}.diagram-num{font-variant-numeric:tabular-nums}.cycle-figure text{font-weight:650}.cycle-figure .axis-note{fill:#536664;font-weight:500}@media(max-width:600px){.cycle-figure figcaption{font-size:14px}.cycle-figure svg{max-height:none}}
-</style></head><body><main><header><small>물질과 에너지 · 화학 변화의 자발성</small><h1>열화학 반응식과 헤스 법칙</h1></header><nav class="lesson-tabs" role="tablist" aria-label="수업 단계"><button id="tab-basic" role="tab" aria-controls="basic" aria-selected="true">기본</button><button id="tab-advanced" role="tab" aria-controls="advanced" aria-selected="false" tabindex="-1">심화 탐구</button></nav>
+.lesson-tabs{flex-wrap:wrap}.heat-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(12px,3vw,36px);align-items:center;margin:15px 0}.heat-figure{margin:0;border:1px solid var(--line);border-radius:8px;background:#f6f9f7;padding:8px;text-align:center}.heat-figure svg{max-height:214px}.heat-figure figcaption{font-size:14px;color:#49655f}.heat-settings label,.heat-settings select{display:block}.heat-settings select{margin:6px 0}.heat-reading{margin-top:12px;font-weight:650}.heat-transfer{display:flex;justify-content:center;align-items:center;gap:clamp(12px,4vw,48px);background:#edf4f0;border-radius:8px;text-align:center;padding:13px}.heat-transfer strong{display:block;font-size:clamp(20px,3vw,30px);font-variant-numeric:tabular-nums}.heat-transfer>div:first-child strong{color:#954524}.heat-transfer>div:last-child strong{color:#11624f}.heat-transfer>b{font-size:24px;color:#696957}.heat-equation{margin:10px 0;font-size:clamp(16px,2.1vw,22px);font-weight:650}.heat-detail{border-top:1px solid var(--line);padding-top:10px}.heat-detail p,.heat-detail table{margin-top:8px}.heat-detail table{max-width:700px}.heat-detail th:last-child,.heat-detail td:last-child{text-align:right}@media(max-width:600px){.lesson-tabs button{padding:8px 10px}.heat-layout{grid-template-columns:1fr}.heat-figure svg{max-height:165px}.heat-settings label,.heat-settings select{display:inline-block;margin-right:8px}}
+</style></head><body><main><header><small>물질과 에너지 · 화학 변화의 자발성</small><h1>열화학 반응식과 헤스 법칙</h1></header><nav class="lesson-tabs" role="tablist" aria-label="수업 단계"><button id="tab-basic" role="tab" aria-controls="basic" aria-selected="true">기본</button><button id="tab-calorimeter" role="tab" aria-controls="calorimeter" aria-selected="false" tabindex="-1">중화열 가상 열량계</button><button id="tab-advanced" role="tab" aria-controls="advanced" aria-selected="false" tabindex="-1">심화 탐구</button></nav>
 <section id="basic" role="tabpanel" aria-labelledby="tab-basic" class="lesson-frame">
 <div class="board"><h2>한 번에 가든, 두 번에 나누어 가든<br>방출하는 열은 같을까요?</h2>
 <p class="lesson-headnote">흑연 1 mol이 산소와 반응해 이산화 탄소가 되는 두 경로입니다.</p>
@@ -12,6 +13,26 @@
 <div class="teacher-controls"><button class="primary" id="trace">한 단계씩 보기</button><button id="overview" disabled>전체 보기</button></div>
 <p class="verdict" id="hess-reading" role="status">처음과 끝의 물질·상태·양이 같으면 전체 ΔH도 같습니다.</p>
 <p class="teach-note">25 °C 표준 상태의 반올림값입니다. 열을 방출하므로 두 경로 모두 ΔH° = −393.5 kJ입니다.</p></div></section>
+<section id="calorimeter" role="tabpanel" aria-labelledby="tab-calorimeter" class="lesson-frame" hidden><div class="board heat-board">
+<h2>온도계가 올라가면, 누가 열을 얻은 걸까요?</h2>
+<p>20.0 °C의 묽은 염산과 수산화 나트륨 수용액을 단열 컵에서 섞어 보세요. 온도계는 <strong>용액의 온도</strong>를 읽습니다.</p>
+<div class="heat-layout"><figure class="heat-figure"><svg viewBox="0 0 310 198" role="img" aria-labelledby="cup-title"><title id="cup-title">단열 컵 속 용액과 온도계</title>
+<path id="cup-water" fill="#a8d7cb"/><path d="M37 49l12 128q1 8 9 8h92q9 0 10-8l12-128" fill="none" stroke="#536f6b" stroke-width="4"/>
+
+<rect x="111" y="16" width="14" height="152" rx="7" fill="#fff" stroke="#536f6b" stroke-width="2"/>
+<line id="heat-column" x1="118" x2="118" y1="168" y2="110" stroke="#af4c2e" stroke-width="6"/><circle cx="118" cy="169" r="8" fill="#af4c2e"/>
+<g font-size="13"><path d="M127 110h8m-8-40h8m-8-40h8" stroke="#536f6b"/><text x="140" y="114">20</text><text x="140" y="74">25</text><text x="140" y="34">30 °C</text></g>
+<text x="202" y="103" font-size="14">용액 온도</text><text x="200" y="134" font-size="24" font-weight="700" id="heat-temp"></text></svg><figcaption id="cup-caption"></figcaption></figure>
+<div class="heat-settings"><label for="heat-volume"><strong>두 용액의 부피</strong></label><select id="heat-volume"><option value="25">각각 25 mL</option><option value="50" selected>각각 50 mL</option><option value="100">각각 100 mL</option></select><p class="teach-note">두 용액의 농도는 각각 1.00 mol/L입니다.</p>
+<div class="teacher-controls"><button id="heat-mix" class="primary">두 용액 섞기</button><button id="heat-reset" disabled>다시 시작</button></div>
+<p id="heat-reading" class="heat-reading" role="status"></p></div></div>
+<div class="heat-transfer"><div><span>반응이 방출한 열</span><strong id="heat-reaction"></strong></div><b aria-label="열이 반응에서 용액으로 이동">→</b><div><span>용액이 흡수한 열</span><strong id="heat-solution"></strong></div></div>
+<p class="heat-equation" id="heat-equation"></p>
+<details class="heat-detail"><summary>온도에서 반응열까지 계산하기</summary><p id="heat-working"></p><p>일정한 압력에서 용액의 밀도는 1.00 g/mL, 비열은 4.18 J/(g·°C)로 둡니다. 컵이 흡수하는 열, 외부로 빠져나가는 열과 희석열은 무시합니다. 표시값은 반올림한 모형값입니다.</p></details>
+<details class="heat-detail"><summary>헤스 법칙으로 연결하기 · 고체 NaOH에서 출발하면?</summary><p>같은 양의 고체 NaOH와 묽은 염산에서 출발해 같은 최종 용액을 얻는 두 경로입니다. 먼저 섞기 실험을 하면, 측정한 중화열이 둘째 단계에 들어갑니다.</p>
+<table><thead><tr><th scope="col">경로</th><th scope="col">이 양에서의 반응열</th></tr></thead><tbody><tr><td>직접 · 고체를 묽은 염산에 넣음</td><td id="heat-direct"></td></tr><tr><td>① 물에 고체를 녹임</td><td id="heat-dissolve"></td></tr><tr><td>② 녹인 용액을 중화함</td><td id="heat-step"></td></tr></tbody></table><p id="heat-hess" class="msg"></p>
+<p class="teach-note">두 경로의 전체 물의 양과 처음·끝 상태를 같게 둡니다. 용해열 −44.5 kJ/mol과 중화열 −57.2 kJ/mol을 사용한 이상화 모형입니다.</p></details>
+</div></section>
 <section id="advanced" role="tabpanel" aria-labelledby="tab-advanced" hidden><p class="intro">반응식의 순계수, 물질의 상태, 엔탈피 변화가 모두 맞는 경로를 찾으세요.</p>
 <section class="panel top"><div class="row"><label>탐구 과제 <select id="mission"><option value="co">1. 흑연에서 CO 생성</option><option value="steam" selected>2. 수증기와 CO의 반응</option><option value="liquid">3. 액체 물과 CO의 반응</option></select></label><button id="reset">이 과제 다시 시작</button></div><p class="big actions" id="target"></p><p id="prompt"></p></section>
 <div class="cols"><section class="panel"><h2>열화학 반응식 조합</h2><p>필요한 식의 배율을 정하고, 역반응은 방향을 뒤집으세요. 0배인 식은 제외됩니다.</p><div id="choices"></div></section>
@@ -161,22 +182,52 @@ function updateTrace(){
 }
 document.getElementById('trace').onclick=()=>{traceStep=(traceStep+1)%3;updateTrace()};
 document.getElementById('overview').onclick=()=>{traceStep=-1;updateTrace()};
+let mixed = false;
+function renderCalorimeter(){
+  const volume = Number($('heat-volume').value);
+  const moles = volume / 1000; // Both solutions are 1.00 mol/L.
+  const mass = 2 * volume, capacity = mass * 4.18;
+  const neutralHeat = 57.2 * moles, dissolvedHeat = 44.5 * moles;
+  const rise = mixed ? neutralHeat * 1000 / capacity : 0;
+  const temperature = 20 + rise;
+  const energy = magnitude => '−'+Number(magnitude.toFixed(4)).toLocaleString('en-US',{minimumFractionDigits:3,maximumFractionDigits:4})+' kJ';
+  $('heat-temp').textContent = temperature.toFixed(1)+' °C';
+  $('heat-column').setAttribute('y2',110-8*rise);
+  const liquidSurface = 165 - (mixed?2:1)*volume*.49;
+  const inset = 37+(liquidSurface-49)*.093;
+  $('cup-water').setAttribute('d','M'+inset+' '+liquidSurface+'H'+(209-inset)+'L158 176Q157 183 150 183H58Q51 183 50 176Z');
+  $('cup-caption').textContent = mixed?'섞은 용액 '+mass+' mL':'컵 안의 염산 '+volume+' mL';
+  $('heat-mix').disabled = mixed;
+  $('heat-reset').disabled = !mixed;
+  $('heat-reading').textContent = mixed?'20.0 → '+temperature.toFixed(1)+' °C. 중화 반응이 내놓은 열을 용액이 흡수했습니다.':'섞기 전입니다. 두 용액의 처음 온도를 확인하세요.';
+  $('heat-reaction').textContent = mixed?energy(neutralHeat):'0 kJ';
+  $('heat-solution').textContent = mixed?'+'+neutralHeat.toFixed(3)+' kJ':'0 kJ';
+  $('heat-equation').textContent = mixed?'H⁺(aq) + OH⁻(aq) → H₂O(l)　ΔH = −57.2 kJ (물 1 mol 생성 기준)':'H⁺(aq) + OH⁻(aq) → H₂O(l)';
+  $('heat-working').textContent = mixed?'용액이 얻은 열 q = mcΔT ≈ '+mass+' g × 4.18 J/(g·°C) × '+rise.toFixed(2)+' °C ≈ '+neutralHeat.toFixed(3)+' kJ. 이번에 생긴 물은 '+moles.toFixed(3)+' mol이므로, 물 1 mol당 반응 엔탈피는 '+energy(neutralHeat)+' ÷ '+moles.toFixed(3)+' mol = −57.2 kJ/mol입니다.':'두 용액을 섞으면 혼합 용액의 질량과 온도 변화로 열량을 계산할 수 있습니다.';
+  $('heat-direct').textContent = energy(neutralHeat+dissolvedHeat);
+  $('heat-dissolve').textContent = energy(dissolvedHeat);
+  $('heat-step').textContent = mixed?energy(neutralHeat):'섞기 전';
+  $('heat-hess').textContent = mixed?'용해열과 중화열을 더하면 직접 경로와 같습니다. 직접 경로 '+energy(neutralHeat+dissolvedHeat)+' = ('+energy(dissolvedHeat)+') + ('+energy(neutralHeat)+').':'두 용액을 섞은 뒤 ①과 ②의 합을 직접 경로와 비교하세요.';
+}
+$('heat-mix').onclick=()=>{mixed=true;renderCalorimeter()};
+$('heat-reset').onclick=$('heat-volume').onchange=()=>{mixed=false;renderCalorimeter()};
+renderCalorimeter();
+const lessonNames=['basic','calorimeter','advanced'];
 function displayLesson(){
-  const advanced=location.hash==='#advanced';
-  for(const name of ['basic','advanced']){
-    const active=(name==='advanced')===advanced,button=document.getElementById('tab-'+name);
+  const current=lessonNames.includes(location.hash.slice(1))?location.hash.slice(1):'basic';
+  for(const name of lessonNames){
+    const active=name===current,button=document.getElementById('tab-'+name);
     document.getElementById(name).hidden=!active;
     button.setAttribute('aria-selected',String(active));button.tabIndex=active?0:-1;
   }
-  if(advanced && typeof stopDemo==='function')stopDemo();
 }
-for(const name of ['basic','advanced']){
+for(const name of lessonNames){
   const btn=document.getElementById('tab-'+name);
   btn.onclick=()=>{if(location.hash!=='#'+name)location.hash=name;displayLesson()};
   btn.onkeydown=e=>{
     if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;
     e.preventDefault();
-    const other=e.key==='Home'?'basic':e.key==='End'?'advanced':name==='basic'?'advanced':'basic';
+    const other=e.key==='Home'?'basic':e.key==='End'?'advanced':lessonNames[(lessonNames.indexOf(name)+(e.key==='ArrowRight'?1:2))%3];
     const target=document.getElementById('tab-'+other);target.click();target.focus();
   };
 }
