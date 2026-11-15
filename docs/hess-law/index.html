@@ -1,87 +1,102 @@
 <!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>열화학 반응식과 헤스 법칙</title>
-<style>
-:root{color-scheme:light;--ink:#1c3438;--teal:#126252;--border:#cbd9d6;--muted:#49656a;font:16px/1.55 system-ui,"Malgun Gothic",sans-serif;color:var(--ink);background:#f4f7f5}
-*{box-sizing:border-box}body,h1,h2,h3,p{margin:0}main{max-width:1120px;margin:auto;padding:clamp(16px,3vw,40px) clamp(12px,3vw,32px)}h1{font-size:clamp(27px,4vw,45px);letter-spacing:-.055em;line-height:1.25;margin:5px 0 8px}header small{font-weight:700;color:var(--teal)}header p,.note{color:var(--muted)}h2{font-size:clamp(18px,2vw,23px);margin-bottom:8px}h3{font-size:17px}button,select,input{font:inherit;accent-color:var(--teal)}button,select{padding:6px 10px;border:1px solid #a7bcb8;border-radius:6px;background:white;color:var(--ink);cursor:pointer}button[aria-pressed=true],button.primary{background:var(--teal);color:white;border-color:var(--teal)}button:disabled{opacity:.55;cursor:default}:focus-visible{outline:3px solid #b06c20;outline-offset:2px}[hidden]{display:none!important}
-.box{background:white;border:1px solid var(--border);border-radius:10px;padding:clamp(12px,2vw,22px);margin-top:14px}.cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}.cols>*{min-width:0}.row,.tabs{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}.tabs{margin:15px 0 6px}.row label{display:inline-flex;align-items:center;gap:6px}.status{background:#e9f2ee;border-radius:6px;padding:9px 12px;margin-top:12px;min-height:40px}.big{font-size:clamp(19px,2.5vw,28px);font-weight:700;letter-spacing:-.035em}.note{font-size:14px;margin-top:8px}svg{display:block;width:100%;height:auto}svg text{font-family:inherit;fill:var(--ink)}input[type=range]{max-width:100%}button:hover{border-color:var(--teal)}table{border-collapse:collapse;width:100%}td,th{padding:6px;text-align:center;border-bottom:1px solid var(--border)}th{background:#edf3f1}.actions{margin-top:10px}summary{cursor:pointer}a{color:var(--teal)}@media(max-width:680px){.cols{grid-template-columns:1fr;gap:0}main{padding-top:17px}.box{margin-top:10px}td,th{padding:4px;font-size:14px}}
-
-.goal{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#eaf3ef}.reaction+.reaction{border-top:1px solid var(--border);margin-top:12px;padding-top:12px}.reaction p{margin:4px 0}.reaction .row{margin-top:8px}</style></head><body><main><header><small>물질과 에너지 · 화학 변화의 자발성</small><h1>열화학 반응식과 헤스 법칙</h1><p>두 연소식의 방향과 계수를 조절해 목표 반응의 엔탈피를 구하세요.</p></header>
-<section class="box goal"><div><small>목표 반응 · 흑연으로부터 CO 1 mol 생성</small><p class="big">C(s, 흑연) + ½O₂(g) → CO(g)</p></div><button id="reset">처음으로</button></section>
-<div class="cols"><section class="box"><h2>두 연소식 조합하기</h2><div id="choices"></div></section><section class="box"><h2>반응식에 따른 ΔH 누적값</h2><svg id="levels" role="img" aria-label="처음, 첫째 식을 더한 뒤, 두 식을 더한 뒤의 누적 엔탈피 변화" viewBox="0 0 450 210"></svg><p class="note">25 °C, 표준 상태. 수치는 선택한 식의 양에 대한 kJ입니다.</p></section></div>
-<section class="box"><h2>합친 식에서 같은 물질 소거하기</h2><p class="big" id="sum"></p><div class="row actions" id="cancel"></div><p class="note">양변에서 같은 물질을 같은 양만큼 소거할 수 있습니다.</p><div class="row actions"><button class="primary" id="check">목표 반응과 비교</button></div><p class="status" role="status" id="feedback"></p></section>
-<p class="note">표준 생성 엔탈피 자료 · <a href="https://webbook.nist.gov/cgi/cbook.cgi?ID=C124389&amp;Mask=1">CO₂(g)</a> · <a href="https://webbook.nist.gov/cgi/cbook.cgi?ID=C630080&amp;Mask=1">CO(g)</a> (NIST Chemistry WebBook)</p>
+<style>:root{--ink:#21363a;--muted:#4d6266;--green:#17665a;--rust:#a34b29;--purple:#614487;--line:#c7d5d3;font:16px/1.55 system-ui,"Malgun Gothic",sans-serif;color:var(--ink);background:#f3f6f5;color-scheme:light}*{box-sizing:border-box}body,h1,h2,h3,p{margin:0}main{max-width:1240px;margin:auto;padding:clamp(16px,3vw,36px)}header small{color:var(--green);font-weight:650}h1{font-size:clamp(26px,4vw,42px);line-height:1.2;margin:5px 0 8px;letter-spacing:-.05em}h2{font-size:20px;margin-bottom:8px}h3{font-size:16px}p{overflow-wrap:anywhere}.intro,.note{color:var(--muted)}.note{font-size:14px;margin-top:8px}.panel{border:1px solid var(--line);background:#fff;border-radius:9px;padding:clamp(12px,1.8vw,20px);margin-top:14px}.cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}.cols>*{min-width:0}.row{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px}.row label{display:inline-flex;align-items:center;gap:7px;flex-wrap:wrap}.top{background:#e8f2ed}.big{font-size:clamp(18px,2.5vw,26px);font-weight:700}.msg{margin-top:12px;border-left:4px solid #538a78;background:#edf4f0;padding:9px 12px}.actions{margin-top:10px}button,select,input{font:inherit}button,select{border:1px solid #a9bcb9;border-radius:5px;padding:5px 9px;color:inherit;background:white;cursor:pointer}button.primary,button[aria-pressed=true]{background:var(--green);color:white}button:disabled{opacity:.55;cursor:default}input[type=range]{accent-color:var(--green);max-width:100%}input[type=number]{width:8em;padding:4px;border:1px solid var(--line)}:focus-visible{outline:3px solid #ae691e;outline-offset:2px}a{color:var(--green)}svg{width:100%;height:auto;display:block;font:15px system-ui,sans-serif}svg text{fill:var(--ink)}table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}th,td{text-align:left;padding:6px;border-bottom:1px solid var(--line)}th{background:#eef3f2}.reaction{border-top:1px solid var(--line);padding:9px 0}.reaction p{margin:3px 0}.formula{font-weight:650}details{margin-top:12px}summary{cursor:pointer;font-weight:650}[hidden]{display:none!important}@media(max-width:720px){.cols{grid-template-columns:1fr;gap:0}main{padding:14px 10px}td,th{font-size:13px;padding:4px}.row{gap:6px}svg{font-size:17px}}</style></head><body><main><header><small>물질과 에너지 · 화학 변화의 자발성</small><h1>열화학 반응식과 헤스 법칙</h1><p class="intro">반응식의 순계수, 물질의 상태, 엔탈피 변화가 모두 맞는 경로를 찾으세요.</p></header>
+<section class="panel top"><div class="row"><label>탐구 과제 <select id="mission"><option value="co">1. 흑연에서 CO 생성</option><option value="steam" selected>2. 수증기와 CO의 반응</option><option value="liquid">3. 액체 물과 CO의 반응</option></select></label><button id="reset">이 과제 다시 시작</button></div><p class="big actions" id="target"></p><p id="prompt"></p></section>
+<div class="cols"><section class="panel"><h2>열화학 반응식 조합</h2><p>필요한 식의 배율을 정하고, 역반응은 방향을 뒤집으세요. 0배인 식은 제외됩니다.</p><div id="choices"></div></section>
+<section class="panel"><h2>상태와 경로 검증</h2><p id="gross" class="formula"></p><div class="row actions" id="cancel"></div><p class="note">양쪽에서 같은 상태의 물질을 같은 양만큼 소거하세요.</p><p class="big actions" id="sum"></p><div id="residual" class="msg"></div>
+<div class="row actions"><label>예측 ΔH° <input id="prediction" type="number" step="0.01" placeholder="부호 포함"> kJ</label><button class="primary" id="check">경로 검증·기록</button></div><p class="note" id="feedback" role="status"></p></section></div>
+<section class="panel"><h2>동일한 상태를 잇는 경로 비교</h2><p id="compare"></p><svg id="levels" viewBox="0 0 750 210" role="img" aria-label="검증한 경로별 누적 엔탈피 변화" hidden></svg><div id="record"></div><p class="note">세로축은 출발 상태를 0으로 둔 상대 엔탈피입니다. 점 사이의 선은 열화학식 합산 순서를 표시합니다. 중간 물질이 실제 반응에서 생성되는지는 별도 실험으로 확인해야 합니다.</p></section>
+<details class="panel"><summary>자료와 정밀도</summary><p>298.15 K 표준 상태. 선택한 반응식의 물질량 기준으로 kJ를 표시합니다. CO₂(g), CO(g), H₂O(g), H₂O(l)의 표준 생성 엔탈피를 각각 −393.51, −110.53, −241.83, −285.83 kJ/mol로 반올림해 사용합니다. 이 자료로 계산한 H₂O(l) → H₂O(g)의 ΔH°는 +44.00 kJ/mol입니다.</p><p><a href="https://webbook.nist.gov/cgi/cbook.cgi?ID=C630080&amp;Mask=1">NIST · CO</a> · <a href="https://webbook.nist.gov/cgi/cbook.cgi?ID=C124389&amp;Mask=1">CO₂</a> · <a href="https://webbook.nist.gov/cgi/cbook.cgi?ID=C7732185&amp;Mask=3">물</a></p></details>
 </main><script>
 const $=id=>document.getElementById(id);
-const species=['C(s, 흑연)','O₂(g)','CO(g)','CO₂(g)'];
-const reactions=[
-  {name:'흑연의 완전 연소',net:[-1,-1,0,1],heat:-393.51},
-  {name:'CO의 연소',net:[0,-0.5,-1,1],heat:-282.98}
-];
-const target=[-1,-0.5,1,0];
-let factors=[1,1];
-const cancelled=new Set();
-const number=n=>Number(n.toFixed(2)).toString();
-const heat=n=>(n>0?'+':'')+n.toFixed(2)+' kJ';
-function side(values){
-  return values.map((n,i)=>n>0?(n===1?'':n===0.5?'½':number(n)+' ')+species[i]:'').filter(Boolean).join(' + ')||'∅';
-}
-function sides(net){
-  return [net.map(n=>Math.max(0,-n)),net.map(n=>Math.max(0,n))];
-}
-function equation(left,right){return side(left)+' → '+side(right)}
-function totals(){
-  const left=species.map(()=>0),right=species.map(()=>0);
-  reactions.forEach((r,i)=>r.net.forEach((n,j)=>{
-    const v=n*factors[i]; if(v<0)left[j]-=v;else right[j]+=v;
-  }));
-  return {left,right};
-}
-function drawLevels(steps){
-  const values=[0,steps[0],steps[0]+steps[1]];
-  const max=Math.max(...values),min=Math.min(...values);
-  const y=v=>36+(max-v)/(max-min||1)*118;
-  const x=[65,220,380];
-  $('levels').innerHTML=values.map((v,i)=>{
-    const join=i?'<line x1="'+(x[i-1]+33)+'" y1="'+y(values[i-1])+'" x2="'+(x[i]-33)+'" y2="'+y(v)+'" stroke="#889ca1" stroke-dasharray="5 4"/>':'';
-    return join+'<path d="M'+(x[i]-33)+' '+y(v)+'h66" stroke="#126252" stroke-width="5"/><text text-anchor="middle" x="'+x[i]+'" y="'+(y(v)-9)+'">'+number(v)+'</text><text text-anchor="middle" x="'+x[i]+'" y="191">'+['처음','식 1','식 1 + 식 2'][i]+'</text>';
-  }).join('');
+const species=['C(s, 흑연)','O₂(g)','CO(g)','CO₂(g)','H₂(g)','H₂O(g)','H₂O(l)'];
+// Signed coefficients and standard enthalpies in kJ per written reaction.
+const carbon={name:'흑연의 완전 연소',net:[-1,-1,0,1,0,0,0],h:-393.51};
+const oxidation={name:'CO의 완전 연소',net:[0,-.5,-1,1,0,0,0],h:-282.98};
+const steam={name:'수증기 생성',net:[0,-.5,0,0,-1,1,0],h:-241.83};
+const liquid={name:'액체 물 생성',net:[0,-.5,0,0,-1,0,1],h:-285.83};
+const vapor={name:'물의 기화',net:[0,0,0,0,0,1,-1],h:44};
+const shiftRows=[oxidation,steam,liquid,vapor];
+const tasks={
+ co:{net:[-1,-.5,1,0,0,0,0],rows:[carbon,oxidation],prompt:'두 연소식에서 CO₂와 남는 산소를 소거해 CO 1 mol의 생성 엔탈피를 구하세요.'},
+ steam:{net:[0,0,-1,1,1,-1,0],rows:shiftRows,prompt:'수증기를 바로 사용하는 경로와, 액체 물을 거치는 경로를 각각 기록하세요.'},
+ liquid:{net:[0,0,-1,1,1,0,-1],rows:shiftRows,prompt:'출발 물질이 액체 물로 바뀌었습니다. 기화 단계를 이용하는 경로와 이용하지 않는 경로를 비교하세요.'}
+};
+let task,factors,records=[];
+const removed=new Set();
+const zeros=()=>species.map(()=>0);
+const signed=n=>(n>0?'+':'')+n.toFixed(2);
+function side(values){return values.map((v,i)=>v>0?(v===1?'':v===.5?'½':v+' ')+species[i]:'').filter(Boolean).join(' + ')||'∅'}
+function split(net){return [net.map(v=>Math.max(0,-v)),net.map(v=>Math.max(0,v))]}
+function equation(l,r){return side(l)+' → '+side(r)}
+function state(){
+  const left=zeros(),right=zeros();let h=0;
+  task.rows.forEach((row,i)=>{
+    h+=row.h*factors[i];
+    row.net.forEach((coef,j)=>{const n=coef*factors[i];if(n<0)left[j]-=n;else right[j]+=n});
+  });
+  return {left,right,h,net:right.map((n,i)=>n-left[i])};
 }
 function render(){
-  const steps=reactions.map((r,i)=>r.heat*factors[i]);
-  reactions.forEach((r,i)=>{
-    $('equation'+i).textContent=equation(...sides(r.net.map(n=>n*factors[i])));
-    $('heat'+i).textContent='ΔH° = '+heat(steps[i]);
-    $('reverse'+i).setAttribute('aria-pressed',String(factors[i]<0));
+  const {left,right,net}=state();
+  $('feedback').textContent='';
+  $('choices').querySelectorAll('.reaction').forEach((block,i)=>{
+    const r=task.rows[i],factor=factors[i];
+    block.querySelector('.formula').textContent=equation(...split(r.net.map(n=>n*(factor||1))));
+    block.querySelector('.heat').textContent=factor?'이 식의 ΔH° = '+signed(factor*r.h)+' kJ':'정방향 1배 자료 · '+signed(r.h)+' kJ (합에서 제외)';
+    block.querySelector('button').disabled=!factor;
+    block.querySelector('button').setAttribute('aria-pressed',String(factor<0));
   });
-  drawLevels(steps);
-  const {left,right}=totals();
+  $('gross').textContent='소거 전　'+equation(left,right);
   $('cancel').replaceChildren();
   species.forEach((symbol,i)=>{
-    const pairs=Math.min(left[i],right[i]);
-    if(!pairs)return;
-    const b=document.createElement('button');
-    b.textContent=symbol+' '+number(pairs)+' mol 소거';
-    b.setAttribute('aria-pressed',String(cancelled.has(i)));
-    b.onclick=()=>{if(cancelled.has(i))cancelled.delete(i);else cancelled.add(i);render();$('cancel').querySelector('[data-i="'+i+'"]').focus()};
-    b.dataset.i=i;$('cancel').append(b);
-    if(cancelled.has(i)){left[i]-=pairs;right[i]-=pairs}
+    const pairs=Math.min(left[i],right[i]);if(!pairs)return;
+    const b=document.createElement('button');b.textContent=symbol+' '+pairs+' mol 소거';b.dataset.i=i;
+    b.setAttribute('aria-pressed',String(removed.has(i)));
+    b.onclick=()=>{if(removed.has(i))removed.delete(i);else removed.add(i);render();$('cancel').querySelector('[data-i="'+i+'"]').focus()};
+    $('cancel').append(b);
+    if(removed.has(i)){left[i]-=pairs;right[i]-=pairs}
   });
   $('sum').textContent=equation(left,right);
-  $('feedback').textContent='두 식의 ΔH° 합은 '+heat(steps[0]+steps[1])+'입니다.';
+  const mismatch=species.filter((_,i)=>net[i]!==task.net[i]);
+  $('residual').textContent=mismatch.length?'목표와 순계수가 다른 물질　'+mismatch.join(' · '):
+    left.some((n,i)=>n&&right[i])?'순계수는 목표와 같습니다. 양변에 남은 공통 물질을 소거하세요.':'출발·도착 상태와 물질량이 목표 반응과 일치합니다.';
 }
-reactions.forEach((r,i)=>{
-  const block=document.createElement('div');block.className='reaction';
-  block.innerHTML='<h3>식 '+(i+1)+' · '+r.name+'</h3><p id="equation'+i+'"></p><p id="heat'+i+'"></p><div class="row"><button id="reverse'+i+'">방향 뒤집기</button><label>계수 배율 <select id="factor'+i+'"><option value=".5">½배</option><option value="1" selected>1배</option><option value="2">2배</option></select></label></div>';
-  $('choices').append(block);
-  $('reverse'+i).onclick=()=>{factors[i]*=-1;cancelled.clear();render()};
-  $('factor'+i).onchange=e=>{factors[i]=Math.sign(factors[i])*Number(e.target.value);cancelled.clear();render()};
-});
+function draw(){
+  const chart=$('levels');chart.hidden=!records.length;
+  $('compare').textContent=!records.length?'반응식과 예측값을 검증하면 경로가 표시됩니다.':records.length===1?(task.rows.length>2?'첫 경로를 기록했습니다. 물의 상태 변화 단계를 다르게 조합해 같은 목표 반응을 다시 만드세요.':'목표 반응의 엔탈피와 각 단계의 합을 비교하세요.'):'서로 다른 조합이 같은 출발·도착 상태에서 동일한 총 ΔH°를 줍니다.';
+  $('record').replaceChildren();if(!records.length)return;
+  const heights=records.flatMap(r=>r.heights),lo=Math.min(...heights),hi=Math.max(...heights),y=h=>28+(hi-h)/(hi-lo||1)*130;
+  const colors=['#12665a','#ac532d','#615687'];
+  let svg='<text x="9" y="16">H (kJ)</text>';
+  for(const [i,r] of records.entries()){
+    const coord=r.heights.map((h,j)=>[85+545*j/(r.heights.length-1),y(h)]),col=colors[i%3];
+    svg+='<polyline points="'+coord.map(pt=>pt.join(',')).join(' ')+'" stroke="'+col+'" stroke-width="3" fill="none" '+(i?'stroke-dasharray="6 4"':'')+'/>';
+    for(const [x,v] of coord)svg+='<circle cx="'+x+'" cy="'+v+'" r="4" fill="'+col+'"/>';
+    const p=document.createElement('p');p.textContent='경로 '+(i+1)+'　'+r.steps.join(' → ')+'　|　누적값 '+r.heights.map(signed).join(' → ')+' kJ';$('record').append(p);
+  }
+  const last=records[0].heights.at(-1);
+  chart.innerHTML=svg+'<text x="22" y="'+(y(0)+5)+'">0</text><text x="640" y="'+(y(last)+5)+'">'+signed(last)+'</text><text x="65" y="195">출발 상태</text><text x="600" y="195">도착 상태</text>';
+}
+function reset(){
+  task=tasks[$('mission').value];factors=task.rows.map((_,i)=>i<2?1:0);records=[];removed.clear();
+  $('prediction').value='';$('target').textContent=equation(...split(task.net));$('prompt').textContent=task.prompt;
+  $('choices').replaceChildren(...task.rows.map((row,i)=>{
+    const d=document.createElement('div');d.className='reaction';d.innerHTML='<h3>식 '+(i+1)+' · '+row.name+'</h3><p class="formula"></p><p class="heat"></p><div class="row"><label>배율 <select><option>0</option><option>0.5</option><option>1</option><option>2</option></select></label><button>방향 뒤집기</button></div>';
+    const mult=d.querySelector('select');mult.value=Math.abs(factors[i]);
+    mult.onchange=()=>{factors[i]=(Math.sign(factors[i])||1)*Number(mult.value);removed.clear();render()};
+    d.querySelector('button').onclick=()=>{factors[i]*=-1;removed.clear();render()};return d;
+  }));render();draw();
+}
 $('check').onclick=()=>{
-  const {left,right}=totals();
-  const match=target.every((n,i)=>right[i]-left[i]===n);
-  const remains=left.some((n,i)=>n&&right[i]&&!cancelled.has(i));
-  $('feedback').textContent=!match?'목표 식의 CO(g)와 계수를 비교하세요. CO(g)는 어느 쪽에 있어야 할까요?':remains?'방향과 계수는 맞았습니다. 양변에 함께 남은 물질을 소거하세요.':'완성! 목표 반응과 출발·도착 상태가 같습니다. CO(g) 1 mol을 만드는 ΔH°는 −110.53 kJ입니다.';
+  const {left,right,h,net}=state();
+  if(net.some((v,i)=>v!==task.net[i])||left.some((v,i)=>v&&right[i]&&!removed.has(i))){$('feedback').textContent='위의 상태·소거 결과를 먼저 확인하세요.';return}
+  if(!Number.isFinite($('prediction').valueAsNumber)||Math.abs($('prediction').valueAsNumber-h)>.0051){$('feedback').textContent='각 식의 방향·배율을 반영한 ΔH°를 더하고 소수 둘째 자리까지 입력하세요.';return}
+  const key=factors.join(',');
+  if(records.some(r=>r.key===key)){$('feedback').textContent='이미 기록한 조합입니다.';return}
+  const heights=[0],steps=[];
+  task.rows.forEach((r,i)=>{if(factors[i]){heights.push(heights.at(-1)+factors[i]*r.h);steps.push('식 '+(i+1)+' × '+factors[i])}});
+  records.push({key,heights,steps});draw();$('feedback').textContent='검증 완료 · ΔH° = '+signed(h)+' kJ';
 };
-$('reset').onclick=()=>{factors=[1,1];cancelled.clear();$('factor0').value=$('factor1').value='1';render()};
-render();
+$('mission').onchange=$('reset').onclick=reset;reset();
 </script></body></html>
