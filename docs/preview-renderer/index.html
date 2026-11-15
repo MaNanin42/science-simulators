@@ -1,0 +1,28 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="referrer" content="no-referrer"><title>시뮬레이터 첫 화면 생성</title><style>body{margin:0}iframe{width:1136px;height:710px;border:0}</style><script src="html2canvas.min.js"></script><body><script>
+'use strict';
+let busy=false;
+const parentAllowed = origin => origin === location.origin || origin === 'https://script.google.com' || /^https:\/\/[a-z0-9-]+(?:-script)?\.googleusercontent\.com$/.test(origin);
+addEventListener('message', async event => {
+  if (busy || event.source!==parent || !parentAllowed(event.origin) || event.data?.type!=='capture-simulator') return;
+  const u=new URL(event.data.url,location.origin);
+  if (u.origin!==location.origin || u.protocol!=='https:' || u.username || u.password || u.pathname.startsWith('/science-simulators/preview-renderer/')) return;
+  busy=true;
+  const frame=document.createElement('iframe');
+  frame.setAttribute('sandbox','allow-scripts allow-same-origin');frame.referrerPolicy='no-referrer';
+  const reply=data=>event.source.postMessage({type:'simulator-preview',...data},event.origin);
+  try {
+    const loaded=new Promise((resolve,reject)=>{frame.onload=resolve;frame.onerror=reject});
+    frame.src=u.href;document.body.append(frame);
+    await loaded;
+    if(frame.contentWindow.location.origin!==location.origin)throw Error('origin');
+    const doc=frame.contentDocument;
+    await doc.fonts.ready;await new Promise(r=>setTimeout(r,850));
+    if(!doc.body || doc.querySelector('input[type=password]') || !doc.body.innerText.trim() || /page not found.*github pages/i.test(doc.title))throw Error('unavailable');
+    // html2canvas only reads this public origin. The result travels back to the requesting browser.
+    const canvas=await html2canvas(doc.documentElement,{backgroundColor:'#fff',windowWidth:1136,windowHeight:710,width:1136,height:710,scale:.70,logging:false,allowTaint:false,useCORS:false,scrollX:0,scrollY:0,imageTimeout:4000});
+    const image=canvas.toDataURL('image/webp',.80);
+    if(!image.startsWith('data:image/webp;base64,')||image.length>650000)throw Error('size');
+    reply({image});
+  }catch(error){reply({failed:true});}finally{frame.remove();busy=false;}
+});
+</script></body></html>

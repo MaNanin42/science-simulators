@@ -1,0 +1,54 @@
+name: First-screen previews
+on:
+  push:
+    branches: [main]
+    paths: ['docs/**', 'tools/build_previews.py', '.github/workflows/first-screens.yml']
+  workflow_dispatch:
+permissions: {}
+concurrency:
+  group: first-screens
+  cancel-in-progress: false
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    permissions: {contents: read}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - name: Capture published simulator screens
+        run: |
+          python3 -m venv "$RUNNER_TEMP/sim-python"
+          "$RUNNER_TEMP/sim-python/bin/pip" install --disable-pip-version-check Pillow==11.3.0 playwright==1.55.0
+          "$RUNNER_TEMP/sim-python/bin/python" tools/build_previews.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: first-screens
+          path: preview-output/
+          retention-days: 1
+  publish:
+    needs: render
+    runs-on: ubuntu-latest
+    permissions: {contents: write}
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 1}
+      - uses: actions/download-artifact@v4
+        with: {name: first-screens, path: build}
+      - name: Update image branch
+        run: |
+          set -euo pipefail
+          if git ls-remote --exit-code --heads origin simulator-previews >/dev/null; then
+            git fetch --depth=1 origin simulator-previews
+            git worktree add -b simulator-previews "$RUNNER_TEMP/images" FETCH_HEAD
+          else
+            git worktree add --detach "$RUNNER_TEMP/images" HEAD
+            git -C "$RUNNER_TEMP/images" switch --orphan simulator-previews
+          fi
+          cp build/*.webp build/manifest.json "$RUNNER_TEMP/images/"
+          cd "$RUNNER_TEMP/images"
+          git add -- '*.webp' manifest.json
+          if ! git diff --cached --quiet; then
+            git -c user.name=Simulator-Previews -c user.email=simulator-previews@users.noreply.github.com commit -m "Update simulator first screens"
+            git push origin HEAD:refs/heads/simulator-previews
+          fi
