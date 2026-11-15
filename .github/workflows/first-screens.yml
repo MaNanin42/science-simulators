@@ -16,7 +16,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with: {persist-credentials: false}
+      - name: Install Korean fonts for Chrome and canvas text
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends fonts-noto-cjk
+          fc-cache -f
+          fc-list :lang=ko family | grep -F 'Noto Sans CJK KR'
+      - name: Get the three separate public simulator sites
+        run: |
+          for site in aspirin-process-simulator mxene-cosmetic-dispersion-simulator ring-strain-newman-projection-visualizer; do
+            git clone --quiet --depth 1 --branch main "https://github.com/MaNanin42/$site.git" "$RUNNER_TEMP/preview-sites/$site"
+          done
       - name: Capture published simulator screens
+        env:
+          PREVIEW_PEERS: ${{ runner.temp }}/preview-sites
         run: |
           python3 -m venv "$RUNNER_TEMP/sim-python"
           "$RUNNER_TEMP/sim-python/bin/pip" install --disable-pip-version-check Pillow==11.3.0 playwright==1.55.0

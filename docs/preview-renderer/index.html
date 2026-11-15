@@ -2,6 +2,24 @@
 'use strict';
 let busy=false;
 const parentAllowed = origin => origin === location.origin || origin === 'https://script.google.com' || /^https:\/\/[a-z0-9-]+(?:-script)?\.googleusercontent\.com$/.test(origin);
+// This font is used only inside the capture frame. Keep the original families for other scripts and symbols.
+async function prepareHangul(doc) {
+  const korean = /[\u1100-\u11ff\u3130-\u318f\ua960-\ua97f\uac00-\ud7ff]/;
+  const style = doc.createElement('style');
+  const url = new URL('hangul.woff2', location.href).href;
+  style.textContent = `@font-face{font-family:PreviewHangul;src:url("${url}") format("woff2");font-weight:100 900;unicode-range:U+1100-11FF,U+3130-318F,U+A960-A97F,U+AC00-D7FF}`;
+  doc.head.append(style);
+  await doc.fonts.load('16px PreviewHangul', '한글');
+  const elements = [...doc.body.querySelectorAll('*'), doc.body];
+  const runs = elements.filter(el =>
+    !el.matches('script,style,template,noscript') && (
+      [...el.childNodes].some(n => n.nodeType === 3 && korean.test(n.textContent)) ||
+      (el.matches('input,textarea,select') && korean.test(el.value + (el.placeholder || '')))
+    )
+  ).map(el => [el, doc.defaultView.getComputedStyle(el).fontFamily]);
+  for (const [el, family] of runs) el.style.setProperty('font-family', 'PreviewHangul, '+family, 'important');
+  await doc.fonts.ready;
+}
 addEventListener('message', async event => {
   if (busy || event.source!==parent || !parentAllowed(event.origin) || event.data?.type!=='capture-simulator') return;
   const u=new URL(event.data.url,location.origin);
@@ -18,6 +36,7 @@ addEventListener('message', async event => {
     const doc=frame.contentDocument;
     await doc.fonts.ready;await new Promise(r=>setTimeout(r,850));
     if(!doc.body || doc.querySelector('input[type=password]') || !doc.body.innerText.trim() || /page not found.*github pages/i.test(doc.title))throw Error('unavailable');
+    await prepareHangul(doc);
     // Preserve relative styles and images when the capture library clones the document.
     if(!doc.querySelector('base[href]')){
       const base=doc.createElement('base');base.href=doc.baseURI;doc.head.prepend(base);
