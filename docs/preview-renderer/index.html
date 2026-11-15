@@ -18,6 +18,14 @@ addEventListener('message', async event => {
     const doc=frame.contentDocument;
     await doc.fonts.ready;await new Promise(r=>setTimeout(r,850));
     if(!doc.body || doc.querySelector('input[type=password]') || !doc.body.innerText.trim() || /page not found.*github pages/i.test(doc.title))throw Error('unavailable');
+    // Preserve relative styles and images when the capture library clones the document.
+    if(!doc.querySelector('base[href]')){
+      const base=doc.createElement('base');base.href=doc.baseURI;doc.head.prepend(base);
+    }
+    for(const node of doc.querySelectorAll('link[rel~="stylesheet"][href],img[src]')){
+      if(node.tagName==='LINK')node.setAttribute('href',node.href);
+      else node.setAttribute('src',node.src);
+    }
     // html2canvas only reads this public origin. The result travels back to the requesting browser.
     const canvas=await html2canvas(doc.documentElement,{backgroundColor:'#fff',windowWidth:1136,windowHeight:710,width:1136,height:710,scale:.70,logging:false,allowTaint:false,useCORS:false,scrollX:0,scrollY:0,imageTimeout:4000});
     const image=canvas.toDataURL('image/webp',.80);
