@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>입자 수와 충돌 수</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f4f6f2;color:#173731;font:17px/1.5 "Malgun Gothic",sans-serif;word-break:keep-all}main{max-width:1160px;margin:auto;padding:clamp(16px,3vw,36px) 16px}header small{font-weight:700;color:#48675d}h1{font-size:clamp(31px,4.5vw,51px);letter-spacing:-.065em;line-height:1.22;margin:6px 0}p{margin:0}header p{color:#415c53}.cases{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:18px 0 12px}.cases b{margin-right:4px}button{font:inherit;font-weight:700;padding:7px 15px;border-radius:8px;border:1px solid #9eb7aa;background:white;color:#214c40;cursor:pointer}button[aria-pressed=true],#play{background:#14634f;color:#fff;border-color:#14634f}button:disabled{opacity:.5;cursor:default}button:focus-visible,input:focus-visible{outline:3px solid #c87722;outline-offset:3px}.stage{background:white;border:1px solid #bfd0c8;overflow:hidden;border-radius:15px}.summary,.progress{padding:10px clamp(12px,2vw,24px);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.summary{background:#eaf3ed}.summary strong{font-size:clamp(22px,3vw,33px)}.summary b{font-size:clamp(19px,2.6vw,30px);font-variant-numeric:tabular-nums}svg{width:100%;height:clamp(240px,30vw,380px);display:block;background:linear-gradient(#eef7f8,#fff 24%,#fff 76%,#eef7f8)}.ball text{text-anchor:middle;font:bold 23px Arial,sans-serif;fill:white}.ball.b text{fill:#432900}.ball.inactive{opacity:.32}.progress{border-top:1px solid #d8e5df;color:#35594d}.progress strong{font-size:clamp(19px,2.3vw,26px)}.controls{display:grid;grid-template-columns:1fr 1fr auto;align-items:center;gap:22px;margin-top:12px;border-radius:12px;background:white;border:1px solid #cbd8ce;padding:14px 18px}.controls label{font-weight:bold;display:flex;align-items:center;justify-content:space-between}.controls output{color:#14634f}input{width:100%;accent-color:#176b54}.actions{display:flex;gap:7px}.actions button{padding:10px 14px}@media(max-width:730px){.controls{grid-template-columns:1fr 1fr;gap:12px}.actions{grid-column:1/-1}.actions button{flex:1}}@media(max-width:520px){body{font-size:15px}main{padding:18px 10px}.cases{gap:5px}.cases button{padding:6px 9px}.cases b{flex-basis:100%}.progress{gap:4px}.controls{padding:12px}.summary strong{font-size:19px}}
+.bulk-info{padding:12px 20px;background:#f1f6f4;font-size:16px}.bulk-info b{color:#145d4c}.bulk-controls .scales{grid-column:1/3;display:flex;align-items:center;gap:6px;flex-wrap:wrap}.scales b{margin-right:5px}.bulk-controls{grid-template-columns:1fr auto auto}canvas{display:block;width:100%;height:clamp(240px,30vw,380px);background:#142e34}[hidden]{display:none!important}
+</style></head><body><main>
+<header><small>물질과 에너지 · 반응 속도</small><h1>입자 수와 충돌 수</h1><p>같은 크기의 용기에서 서로 다른 A–B 쌍이 한 번씩 만난다고 가정해 보세요. 입자를 늘리면 충돌 수는 어떻게 달라질까요?</p></header>
+<div class="cases" role="group" aria-label="그림의 사례"><b>그림의 사례</b>
+<button data-a="1" data-b="1">A 1 · B 1</button><button data-a="2" data-b="1">A 2 · B 1</button><button data-a="2" data-b="2">A 2 · B 2</button><button data-a="2" data-b="3">A 2 · B 3</button><button id="bulk" aria-pressed="false">대량 충돌</button></div>
+<section class="stage" aria-label="입자 쌍과 충돌 관찰">
+<div class="summary"><strong>가능한 A–B 쌍</strong><b id="total"></b></div>
+<svg id="scene" viewBox="0 0 640 300" role="img" aria-labelledby="desc"><title id="desc"></title><defs>
+<radialGradient id="red" cx=".32" cy=".24" r=".8"><stop stop-color="#f97c65"/><stop offset="1" stop-color="#b52d22"/></radialGradient>
+<radialGradient id="gold" cx=".32" cy=".24" r=".8"><stop stop-color="#ffdc69"/><stop offset="1" stop-color="#eb9a14"/></radialGradient>
+<marker id="arrow" viewBox="0 0 8 8" refX="6" refY="4" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 8 4 0 8Z" fill="#598496"/></marker></defs>
+<g id="links"></g><g id="balls"></g></svg>
+<canvas id="gas" hidden role="img" aria-label="빨간 A와 노란 B가 동시에 움직이고, 서로 만나면 흰 테두리가 나타나는 예시"></canvas>
+<div class="bulk-info" id="bulkInfo" hidden><b id="rate"></b><br>같은 부피와 온도에서 A–B 한 쌍의 평균 충돌 횟수를 초당 100만분의 1회로 가정한 모형입니다. 움직이는 점은 일부 입자의 예시입니다.</div>
+<div class="progress"><span id="status" role="status"></span><strong id="counter"></strong></div></section>
+<div class="controls"><div><label for="a">A 입자 수 <output id="av" for="a"></output></label><input id="a" type="range" min="1" max="4" value="1"></div>
+<div><label for="b">B 입자 수 <output id="bv" for="b"></output></label><input id="b" type="range" min="1" max="4" value="1"></div>
+<div class="scales" id="scales" role="group" aria-label="A와 B 각각의 입자 수" hidden><b>A와 B 각각</b><button data-n="100000000">1억 개</button><button data-n="1000000000">10억 개</button><button data-n="10000000000">100억 개</button></div>
+<div class="actions"><button id="play">▶ 충돌 재생</button><button id="reset">처음으로</button></div></div>
+</main><script>
+const $=id=>document.getElementById(id);
+const presets=[...document.querySelectorAll('[data-a]')];
+const intro=document.querySelector('header p'),smallIntro=intro.textContent;
+let bulkMode=false,abundance=10000000000,gasPoints=[],lastTime=0;
+const modelDuration=5000;
+const scaleButtons=[...document.querySelectorAll('[data-n]')];
+function quantity(number){
+  for(const [size,name] of [[1e20,'해'],[1e16,'경'],[1e12,'조'],[1e8,'억']]){
+    if(number>=size)return (number/size).toLocaleString('ko-KR',{maximumFractionDigits:2})+name;
+  }
+  return Math.round(number).toLocaleString('ko-KR');
+}
+function layoutBulk(on){
+  bulkMode=on;$('bulk').setAttribute('aria-pressed',String(on));
+  $('scene').toggleAttribute('hidden',on);$('gas').hidden=$('bulkInfo').hidden=$('scales').hidden=!on;
+  $('a').parentElement.hidden=$('b').parentElement.hidden=on;
+  document.querySelector('.controls').classList.toggle('bulk-controls',on);
+  intro.textContent=on?'A와 B를 각각 10배로 늘려 보세요. 같은 1초 동안 예상되는 충돌 횟수가 몇 배가 될까요?':smallIntro;
+}
+let particles=[],pairs=[],count=0,elapsed=0,frame=0,playing=false;
+const period=1320,hit=.46,radius=24;
+function append(parent,tag,attrs){
+  const el=document.createElementNS('http://www.w3.org/2000/svg',tag);
+  for(const [k,v] of Object.entries(attrs))el.setAttribute(k,v);
+  parent.append(el);return el;
+}
+function place(p,x,y){p.el.setAttribute('transform','translate('+x+' '+y+')')}
+function balls(kind,n,x){
+  return Array.from({length:n},(_,i)=>{
+    const y=150+(i-(n-1)/2)*Math.min(112,232/Math.max(n-1,1));
+    const el=append($('balls'),'g',{class:'ball '+kind.toLowerCase()});
+    append(el,'circle',{r:radius,fill:kind==='A'?'url(#red)':'url(#gold)'});
+    const name=kind+String.fromCharCode(0x2081+i);
+    append(el,'text',{y:8}).textContent=name;
+    const p={el,x,y,name};place(p,x,y);return p;
+  });
+}
+function stop(){cancelAnimationFrame(frame);playing=false}
+function setCount(n){
+  count=n;$('counter').textContent='누적 충돌 '+n+'회 / '+pairs.length+'회';
+}
+function setup(){
+  stop();elapsed=0;layoutBulk(false);
+  const a=Number($('a').value),b=Number($('b').value);
+  $('av').value=a+'개';$('bv').value=b+'개';
+  $('links').replaceChildren();$('balls').replaceChildren();
+  const left=balls('A',a,76),right=balls('B',b,564);
+  particles=[...left,...right];pairs=[];
+  for(const p of left)for(const q of right){
+    const dx=q.x-p.x,dy=q.y-p.y,length=Math.hypot(dx,dy);
+    const ux=dx/length,uy=dy/length,margin=radius+10;
+    const line=append($('links'),'line',{x1:p.x+ux*margin,y1:p.y+uy*margin,x2:q.x-ux*margin,y2:q.y-uy*margin,stroke:'#598496','stroke-width':2.3,'marker-start':'url(#arrow)','marker-end':'url(#arrow)'});
+    pairs.push({p,q,line,dx,dy,travel:.5-radius/length});
+  }
+  presets.forEach(btn=>btn.setAttribute('aria-pressed',String(+btn.dataset.a===a&&+btn.dataset.b===b)));
+  $('total').textContent=a+' × '+b+' = '+pairs.length+'쌍';
+  $('desc').textContent='왼쪽 A 입자 '+a+'개와 오른쪽 B 입자 '+b+'개를 잇는 연결선 '+pairs.length+'개';
+  $('status').textContent='연결선 하나가 A–B 한 쌍입니다.';$('play').textContent='▶ 충돌 재생';setCount(0);
+}
+// The picture is a small illustrative sample. The expected total uses the full population.
+function paintGas(dt){
+  const canvas=$('gas'),w=canvas.clientWidth,h=canvas.clientHeight;
+  const ratio=Math.min(devicePixelRatio||1,2);
+  if(canvas.width!==Math.round(w*ratio)||canvas.height!==Math.round(h*ratio)){
+    canvas.width=Math.round(w*ratio);canvas.height=Math.round(h*ratio);
+  }
+  const ctx=canvas.getContext('2d');ctx.setTransform(ratio,0,0,ratio,0,0);ctx.clearRect(0,0,w,h);
+  for(const p of gasPoints){
+    p.x+=p.vx*dt/w;p.y+=p.vy*dt/h;
+    if(p.x<.02||p.x>.98){p.vx=-p.vx;p.x=Math.max(.02,Math.min(.98,p.x))}
+    if(p.y<.035||p.y>.965){p.vy=-p.vy;p.y=Math.max(.035,Math.min(.965,p.y))}
+    p.glow=Math.max(0,p.glow-dt);
+  }
+  for(let i=0;i<gasPoints.length;i+=2)for(let j=1;j<gasPoints.length;j+=2){
+    const a=gasPoints[i],b=gasPoints[j];
+    const dx=(b.x-a.x)*w,dy=(b.y-a.y)*h,distance=Math.hypot(dx,dy);
+    if(dt>0&&distance>0&&distance<10){
+      const nx=dx/distance,ny=dy/distance;
+      const closing=(a.vx-b.vx)*nx+(a.vy-b.vy)*ny;
+      if(closing>0){
+        a.vx-=closing*nx;a.vy-=closing*ny;b.vx+=closing*nx;b.vy+=closing*ny;
+        a.glow=b.glow=.16;
+      }
+    }
+  }
+  for(const p of gasPoints){
+    ctx.beginPath();ctx.arc(p.x*w,p.y*h,5,0,2*Math.PI);ctx.fillStyle=p.color;ctx.fill();
+    if(p.glow>0){ctx.beginPath();ctx.arc(p.x*w,p.y*h,9,0,2*Math.PI);ctx.strokeStyle='rgba(255,255,255,'+(p.glow/.16)+')';ctx.lineWidth=2;ctx.stroke()}
+  }
+}
+function bulkFrame(now){
+  const dt=Math.max(0,now-lastTime);lastTime=now;
+  elapsed=Math.min(modelDuration,elapsed+dt);
+  if(!matchMedia('(prefers-reduced-motion: reduce)').matches)paintGas(Math.min(dt,50)/1000);
+  const seconds=elapsed/modelDuration;
+  $('status').textContent='모형 시간 '+seconds.toFixed(2)+'초 / 1초';
+  $('counter').textContent='예상 누적 충돌 약 '+quantity(abundance**2/1e6*seconds)+'회';
+  if(elapsed>=modelDuration){stop();$('play').textContent='↻ 다시 재생';return}
+  frame=requestAnimationFrame(bulkFrame);
+}
+function setupBulk(autoPlay){
+  stop();elapsed=0;layoutBulk(true);
+  presets.forEach(btn=>btn.setAttribute('aria-pressed','false'));
+  scaleButtons.forEach(btn=>btn.setAttribute('aria-pressed',String(+btn.dataset.n===abundance)));
+  $('total').textContent=quantity(abundance)+' × '+quantity(abundance)+' = '+quantity(abundance**2)+' 쌍';
+  $('rate').textContent='1초 동안 예상되는 A–B 충돌 약 '+quantity(abundance**2/1e6)+'회';
+  $('status').textContent='모형 시간 0.00초 / 1초';$('counter').textContent='예상 누적 충돌 0회';
+  const sampleSize=[48,84,132][scaleButtons.findIndex(btn=>+btn.dataset.n===abundance)];
+  gasPoints=Array.from({length:sampleSize},(_,i)=>{
+    const angle=Math.random()*Math.PI*2;
+    return {x:.02+.96*Math.random(),y:.035+.93*Math.random(),vx:95*Math.cos(angle),vy:95*Math.sin(angle),glow:0,color:i%2?'#ffce4c':'#ff7566'};
+  });
+  paintGas(0);$('play').textContent='▶ 충돌 재생';
+  if(autoPlay)$('play').click();
+}
+function render(){
+  const i=Math.min(Math.floor(elapsed/period),pairs.length);
+  const phase=elapsed/period-i,active=pairs[i];
+  const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  particles.forEach(p=>{place(p,p.x,p.y);p.el.classList.toggle('inactive',!!active&&p!==active.p&&p!==active.q)});
+  pairs.forEach(({line},j)=>{
+    line.setAttribute('opacity',active&&j!==i?.18:1);
+    line.setAttribute('stroke-width',j===i?4:2.3);
+  });
+  if(!active){
+    setCount(pairs.length);$('status').textContent='모든 A–B 쌍이 한 번씩 충돌했습니다.';
+    stop();$('play').textContent='↻ 다시 재생';return;
+  }
+  const {p,q,dx,dy,travel}=active;
+  const f=phase<hit?phase/hit:phase<.61?1:Math.max(0,(1-phase)/.39);
+  const offset=travel*(reduced?(phase>=hit&&phase<.61?1:0):f);
+  place(p,p.x+dx*offset,p.y+dy*offset);place(q,q.x-dx*offset,q.y-dy*offset);
+  const n=i+Number(phase>=hit);
+  if(n!==count)setCount(n);
+  const message=p.name+'와 '+q.name+(phase<hit?' 접근 중':phase<.61?' 충돌':' 분리 중');
+  if($('status').textContent!==message)$('status').textContent=message;
+}
+$('play').addEventListener('click',()=>{
+  if(playing){stop();$('play').textContent='▶ 이어서 재생';return}
+  if(bulkMode){
+    if(elapsed>=modelDuration)setupBulk(false);
+    playing=true;$('play').textContent='Ⅱ 일시 정지';lastTime=performance.now();
+    frame=requestAnimationFrame(bulkFrame);return;
+  }
+  if(elapsed>=period*pairs.length)setup();
+  playing=true;$('play').textContent='Ⅱ 일시 정지';
+  const start=performance.now()-elapsed;
+  function tick(now){elapsed=Math.min(period*pairs.length,Math.max(0,now-start));render();if(playing)frame=requestAnimationFrame(tick)}
+  frame=requestAnimationFrame(tick);
+});
+presets.forEach(btn=>btn.addEventListener('click',()=>{$('a').value=btn.dataset.a;$('b').value=btn.dataset.b;setup()}));
+for(const id of ['a','b'])$(id).addEventListener('input',setup);
+$('bulk').addEventListener('click',()=>setupBulk(true));
+scaleButtons.forEach(btn=>btn.addEventListener('click',()=>{abundance=+btn.dataset.n;setupBulk(true)}));
+new ResizeObserver(()=>{if(bulkMode)paintGas(0)}).observe($('gas'));
+$('reset').addEventListener('click',()=>bulkMode?setupBulk(false):setup());setup();
+</script></body></html>

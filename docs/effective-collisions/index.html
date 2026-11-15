@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>유효 충돌 실험실 · NO와 O₃</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f4f6f2;color:#192e2a;font:16px/1.55 "Malgun Gothic",sans-serif;word-break:keep-all}
+main{max-width:910px;margin:auto;padding:clamp(24px,5vw,58px) 18px}
+header small{font-weight:700;color:#4a655b}h1{margin:3px 0;font-size:clamp(32px,5vw,50px);letter-spacing:-.065em}
+p{margin:0}header p,.hint{color:#415c51}
+.stage{margin:22px 0 14px;background:#142f32;color:#eef8f4;border-radius:16px;overflow:hidden}
+.top,.status{display:flex;gap:15px;align-items:center;padding:13px clamp(15px,3vw,25px)}
+.top{justify-content:space-between;border-bottom:1px solid #375254}.top .formula{font:600 19px Georgia,serif}.top small{color:#c9d9d6}
+svg{display:block;width:100%;height:clamp(165px,28vw,240px);background-image:radial-gradient(#405a59 1px,transparent 1px);background-size:20px 20px}
+.symbol,.caption{text-anchor:middle;fill:white;font:700 15px Arial,sans-serif}.caption{fill:#d7e9e3;font:600 17px Georgia,serif}
+.status{min-height:61px;background:#1d3a3c}.status strong{color:#a5e6cf;flex:none}.status span{font-size:15px}
+.panel{display:grid;grid-template-columns:1fr 1.1fr auto;gap:24px;align-items:center;padding:19px 22px;border:1px solid #cbd6cd;border-radius:14px;background:white}
+.label,legend{font-size:15px;font-weight:bold}.label{display:flex;justify-content:space-between}output{color:#166b53}
+input[type=range]{width:100%;margin:10px 0 0;accent-color:#16735c;cursor:pointer}.note{color:#53685f;font-size:13px}
+fieldset{min-width:0;border:0;margin:0;padding:0}legend{padding:0;margin-bottom:7px}
+.options{display:flex;gap:5px}.options label{flex:1;cursor:pointer;position:relative}.options input{position:absolute;opacity:0}
+.options span{display:block;text-align:center;padding:7px 3px;border:1px solid #b3c5bc;border-radius:7px}.options input:checked+span{font-weight:bold;background:#dbf1e7;color:#145843;border-color:#548976}
+button{font:inherit;font-weight:700;border:0;border-radius:8px;background:#146452;color:white;padding:12px 19px;cursor:pointer}
+button:disabled{opacity:.65;cursor:wait}button:focus-visible,input:focus-visible,input:focus-visible+span{outline:3px solid #cd8d36;outline-offset:3px}
+.hint{font-size:15px;margin-top:15px}.hint b{color:#195843}
+.presets{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:18px 0 11px}.presets b{font-size:15px;margin-right:5px}
+.presets button{background:white;color:#285448;border:1px solid #a8beb3;padding:6px 16px}.presets button[aria-pressed=true]{background:#146452;color:white;border-color:#146452}.presets+.stage{margin-top:0}
+@media(max-width:720px){.panel{grid-template-columns:1fr 1fr;gap:15px}.panel button{grid-column:1/-1}}
+@media(max-width:480px){main{padding:22px 12px}.panel{grid-template-columns:1fr;padding:16px}.status{align-items:baseline;gap:9px}.status span{font-size:14px}.top .formula{font-size:16px}}
+</style>
+</head><body><main>
+<header><small>물질과 에너지 · 반응 속도</small><h1>유효 충돌 실험실</h1><p>NO와 O₃를 충돌시켜 보세요. 어떤 조건에서 NO₂와 O₂가 생길까요?</p></header>
+<div class="presets" role="group" aria-labelledby="caseLabel"><b id="caseLabel">사례 선택</b>
+  <button type="button" data-energy="4" data-target="end" aria-pressed="true">(가)</button>
+  <button type="button" data-energy="5" data-target="middle" aria-pressed="false">(나)</button>
+  <button type="button" data-energy="5" data-target="end" aria-pressed="false">(다)</button>
+</div>
+<section class="stage" aria-label="한 번의 분자 충돌 관찰">
+  <div class="top"><small id="caseTitle">사례 (가)</small><span class="formula">NO + O₃ → NO₂ + O₂</span></div>
+  <svg id="scene" viewBox="0 0 480 170" role="img" aria-label="충돌 전의 NO와 O₃">
+    <defs>
+      <radialGradient id="nitrogen" cx=".32" cy=".26" r=".82"><stop stop-color="#72bcea"/><stop offset=".6" stop-color="#2678ac"/><stop offset="1" stop-color="#154b73"/></radialGradient>
+      <radialGradient id="oxygen" cx=".32" cy=".26" r=".82"><stop stop-color="#ff9983"/><stop offset=".6" stop-color="#d95140"/><stop offset="1" stop-color="#953525"/></radialGradient>
+    </defs>
+    <path d="M16 82H464" stroke="#7b9690" opacity=".42" stroke-dasharray="4 8"/>
+    <g id="particles"></g>
+    <text id="leftLabel" y="148" class="caption">NO</text><text id="rightLabel" y="148" class="caption">O₃</text>
+  </svg>
+  <div class="status" role="status"><strong id="state">충돌 전</strong><span id="detail">조건을 정하고 충돌시키세요.</span></div>
+</section>
+<div class="panel">
+  <div><label class="label" for="energy">충돌 에너지 <output id="reading" for="energy">4</output></label><input type="range" id="energy" min="1" max="9" value="4"><div class="note">활성화 에너지 5 (모형의 상대값)</div></div>
+  <fieldset id="direction"><legend>NO의 N이 부딪히는 위치</legend><div class="options">
+    <label><input type="radio" name="target" value="end" checked><span>O₃의 끝 O</span></label>
+    <label><input type="radio" name="target" value="middle"><span>O₃의 가운데 O</span></label>
+  </div></fieldset>
+  <button type="button" id="run">▶ 충돌시키기</button>
+</div>
+<p class="hint"><b>비교해 보기</b>　(가)와 (다)는 충돌 에너지, (나)와 (다)는 충돌 방향이 어떻게 다른가요?</p>
+</main>
+<script>
+const get = id => document.getElementById(id);
+const scene = get('scene'), energy = get('energy'), run = get('run');
+const radios = [...document.querySelectorAll('[name=target]')];
+const presets = [...document.querySelectorAll('.presets button')];
+const atoms = ['N','O','O','O','O'].map(symbol => {
+  const make = name => document.createElementNS('http://www.w3.org/2000/svg',name);
+  const atom = make('g'), ball = make('circle'), text = make('text');
+  ball.setAttribute('r',17);
+  ball.setAttribute('fill',symbol==='N'?'url(#nitrogen)':'url(#oxygen)');
+  text.setAttribute('class','symbol');text.setAttribute('y','5');text.textContent=symbol;
+  atom.append(ball,text);get('particles').append(atom);return atom;
+});
+function shift(points,offsets){
+  return points.map(([x,y],i)=>[x+offsets[i],y]);
+}
+function mix(a,b,t){
+  return a.map(([x,y],i)=>[x+(b[i][0]-x)*t,y+(b[i][1]-y)*t]);
+}
+function setup(){
+  const end = radios[0].checked, enough = Number(energy.value)>=5;
+  // Atom 2 is the oxygen transferred from ozone to NO on a successful collision.
+  const contact = end ? [[221,75],[221,48],[250,90],[250,117],[225,128]]
+                      : [[222,80],[195,80],[254,80],[269,57],[269,103]];
+  const before = shift(contact,[-113,-113,113,113,113]);
+  const success = end && enough;
+  const formed = success ? [[221,75],[221,48],[244,89],[258,118],[232,125]] : contact;
+  const after = shift(formed,[-113,-113,success?-113:113,113,113]);
+  return {end,enough,success,contact,before,formed,after};
+}
+function draw(points,labels,product=false){
+  atoms.forEach((atom,i)=>atom.setAttribute('transform','translate('+points[i].join(' ')+')'));
+  const groups=product?[[0,1,2],[3,4]]:[[0,1],[2,3,4]];
+  groups.forEach((indices,i)=>{
+    const caption=get(i?'rightLabel':'leftLabel');
+    caption.textContent=labels?(product?['NO₂','O₂']:['NO','O₃'])[i]:'';
+    caption.setAttribute('x',indices.reduce((sum,k)=>sum+points[k][0],0)/indices.length);
+    caption.setAttribute('y',Math.max(...indices.map(k=>points[k][1]))+36);
+  });
+}
+function status(title,message){
+  get('state').textContent=title;get('detail').textContent=message;
+}
+function reset(){
+  get('reading').value=energy.value;
+  const target=radios.find(radio=>radio.checked).value;
+  const current=presets.find(button=>button.dataset.energy===energy.value && button.dataset.target===target);
+  presets.forEach(button=>button.setAttribute('aria-pressed',String(button===current)));
+  get('caseTitle').textContent=current?'사례 '+current.textContent:'직접 설정';
+  draw(setup().before,true);scene.setAttribute('aria-label','충돌 전의 NO와 O₃');
+  status('충돌 전','에너지 '+energy.value+' · O₃의 '+(target==='end'?'끝':'가운데')+' O를 향해 충돌합니다.');
+}
+presets.forEach(button=>button.addEventListener('click',()=>{
+  energy.value=button.dataset.energy;
+  radios.find(radio=>radio.value===button.dataset.target).checked=true;
+  reset();
+}));
+energy.addEventListener('input',reset);radios.forEach(input=>input.addEventListener('change',reset));
+run.addEventListener('click',()=>{
+  const trial=setup(), approach=1900/Math.sqrt(Number(energy.value)), pause=330, departure=740;
+  const duration=approach+pause+departure, start=performance.now();
+  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  run.disabled=energy.disabled=get('direction').disabled=true;
+  presets.forEach(button=>button.disabled=true);
+  status('충돌 중','두 분자가 가까워집니다.');
+  function animate(now){
+    const time=reduced?duration:Math.max(0,now-start);
+    if(time<approach)draw(mix(trial.before,trial.contact,time/approach),false);
+    else if(time<approach+pause)draw(mix(trial.contact,trial.formed,(time-approach)/pause),false);
+    else draw(mix(trial.formed,trial.after,Math.min(1,(time-approach-pause)/departure)),time>=duration,trial.success);
+    if(time<duration){requestAnimationFrame(animate);return}
+    if(trial.success)status('유효 충돌','O₃의 산소 원자 하나가 NO와 결합해 NO₂와 O₂가 생겼습니다.');
+    else {
+      const reason=trial.enough?'에너지는 충분하지만 충돌 방향이 맞지 않아':trial.end?'충돌 에너지가 활성화 에너지보다 작아':'에너지가 부족하고 충돌 방향도 맞지 않아';
+      status('반응 없음',reason+' NO와 O₃가 그대로 떨어집니다.');
+    }
+    scene.setAttribute('aria-label',trial.success?'충돌 후의 NO₂와 O₂':'충돌 후의 NO와 O₃');
+    run.disabled=energy.disabled=get('direction').disabled=false;
+    presets.forEach(button=>button.disabled=false);
+  }
+  requestAnimationFrame(animate);
+});
+reset();
+</script></body></html>

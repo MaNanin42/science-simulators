@@ -1,0 +1,4623 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chem-Screen: AI 신약 후보 화학 검증 시뮬레이터</title>
+  <style>
+    :root {
+      --bg: #F8FAFC;
+      --panel: #FFFFFF;
+      --panel-sub: #F1F5F9;
+      --text: #1E293B;
+      --text-muted: #64748B;
+      --border: #E2E8F0;
+      --border-strong: #CBD5E1;
+      --primary: #2563EB;
+      --primary-hover: #1D4ED8;
+      --primary-soft: #EFF6FF;
+      --success: #059669;
+      --success-soft: #ECFDF5;
+      --warn: #D97706;
+      --warn-soft: #FFFBEB;
+      --danger: #DC2626;
+      --danger-soft: #FEF2F2;
+      --purple: #7C3AED;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Malgun Gothic', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1220px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    header {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px 22px;
+      margin-bottom: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .header-title h1 {
+      font-size: 1.38rem;
+      font-weight: 700;
+      color: #0F172A;
+      margin-bottom: 4px;
+    }
+
+    .header-title p {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+    }
+
+    .curriculum-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .tag {
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: var(--panel-sub);
+      color: #334155;
+      border: 1px solid var(--border);
+    }
+
+    /* Top Preset & Summary Bar */
+    .top-bar {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin-bottom: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .preset-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .preset-group {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .preset-label {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #334155;
+      margin-right: 4px;
+    }
+
+    .preset-btn {
+      padding: 6px 11px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      border: 1px solid var(--border-strong);
+      border-radius: 6px;
+      background: #FFFFFF;
+      color: var(--text);
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .preset-btn:hover {
+      background: var(--panel-sub);
+    }
+
+    .preset-btn.active {
+      background: var(--primary);
+      color: #FFFFFF;
+      border-color: var(--primary);
+    }
+
+    .preset-btn.ai-type {
+      border-style: dashed;
+    }
+
+    .action-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .btn {
+      padding: 7px 13px;
+      border: 1px solid var(--border-strong);
+      border-radius: 6px;
+      background: #FFFFFF;
+      font-size: 0.83rem;
+      font-weight: 600;
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .btn:hover {
+      background: var(--panel-sub);
+    }
+
+    .btn.primary {
+      background: var(--primary);
+      color: #FFFFFF;
+      border-color: var(--primary);
+    }
+
+    .btn.primary:hover {
+      background: var(--primary-hover);
+    }
+
+    .summary-strip {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+    }
+
+    @media (max-width: 900px) {
+      .summary-strip {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .summary-item {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 8px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .summary-item .s-title {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .summary-item .s-value {
+      font-size: 0.9rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.76rem;
+      font-weight: 700;
+    }
+
+    .badge.pass { background: var(--success-soft); color: var(--success); border: 1px solid #A7F3D0; }
+    .badge.warn { background: var(--warn-soft); color: var(--warn); border: 1px solid #FDE68A; }
+    .badge.fail { background: var(--danger-soft); color: var(--danger); border: 1px solid #FECACA; }
+    .badge.info { background: var(--primary-soft); color: var(--primary); border: 1px solid #BFDBFE; }
+
+    /* Tabs */
+    .tab-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      min-width: 240px;
+      text-align: left;
+      padding: 12px 16px;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      background: var(--panel);
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .tab-btn:hover {
+      border-color: #94A3B8;
+    }
+
+    .tab-btn.active {
+      border-color: var(--primary);
+      background: var(--primary-soft);
+      box-shadow: inset 0 0 0 1px var(--primary);
+    }
+
+    .tab-step {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 2px;
+    }
+
+    .tab-name {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #0F172A;
+    }
+
+    .tab-sub {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .tab-panel {
+      display: none;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
+    /* Main Workspace Grid */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 350px 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    @media (max-width: 960px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px;
+    }
+
+    .card-title {
+      font-size: 1.02rem;
+      font-weight: 700;
+      color: #0F172A;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Controls */
+    .controls {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .control-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #334155;
+    }
+
+    .control-val {
+      font-family: Consolas, Monaco, monospace;
+      font-size: 0.86rem;
+      font-weight: 700;
+      color: var(--primary);
+      background: var(--primary-soft);
+      padding: 1px 7px;
+      border-radius: 4px;
+    }
+
+    .control-hint {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    input[type="range"].slider {
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: #E2E8F0;
+      outline: none;
+      -webkit-appearance: none;
+    }
+
+    input[type="range"].slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--primary);
+      cursor: pointer;
+      border: 2px solid #FFFFFF;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+
+    select, input[type="text"] {
+      width: 100%;
+      padding: 7px 10px;
+      border: 1px solid var(--border-strong);
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-family: inherit;
+      background: #FFFFFF;
+      color: var(--text);
+    }
+
+    .segmented {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+
+    .seg-btn {
+      padding: 6px 8px;
+      font-size: 0.81rem;
+      font-weight: 600;
+      border: 1px solid var(--border-strong);
+      border-radius: 6px;
+      background: #FFFFFF;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .seg-btn.active {
+      background: #1E293B;
+      color: #FFFFFF;
+      border-color: #1E293B;
+    }
+
+    .organ-btns {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .organ-btn {
+      padding: 5px 9px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      border: 1px solid var(--border-strong);
+      border-radius: 5px;
+      background: var(--bg);
+      cursor: pointer;
+    }
+
+    .organ-btn:hover {
+      background: #E2E8F0;
+    }
+
+    .organ-btn.active {
+      background: var(--primary);
+      color: #FFFFFF;
+      border-color: var(--primary);
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 9px 12px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    /* Visuals & Charts */
+    .viz-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .viz-two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 720px) {
+      .viz-two-col {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .svg-box {
+      width: 100%;
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px;
+    }
+
+    .svg-box svg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* Diagnostic & Equation Boxes */
+    .diag-box {
+      border-left: 4px solid var(--primary);
+      background: var(--bg);
+      padding: 12px 15px;
+      border-radius: 0 8px 8px 0;
+      font-size: 0.88rem;
+    }
+
+    .diag-box.pass { border-left-color: var(--success); background: var(--success-soft); }
+    .diag-box.warn { border-left-color: var(--warn); background: var(--warn-soft); }
+    .diag-box.fail { border-left-color: var(--danger); background: var(--danger-soft); }
+
+    .diag-box h4 {
+      font-size: 0.92rem;
+      margin-bottom: 5px;
+      color: #0F172A;
+    }
+
+    .equation-box {
+      background: #F8FAFC;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 10px 14px;
+      font-size: 0.84rem;
+      color: #334155;
+    }
+
+    .equation-box code {
+      font-family: Consolas, Monaco, monospace;
+      background: #E2E8F0;
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-size: 0.82rem;
+    }
+
+    /* Tables */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.84rem;
+    }
+
+    .data-table th, .data-table td {
+      border: 1px solid var(--border);
+      padding: 7px 9px;
+      text-align: center;
+    }
+
+    .data-table th {
+      background: var(--panel-sub);
+      font-weight: 700;
+      color: #334155;
+    }
+
+    .data-table tr.highlight-row {
+      background: var(--primary-soft);
+      font-weight: 600;
+    }
+
+    /* Balance Meter */
+    .meter-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .meter-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .meter-head {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+
+    .meter-track {
+      height: 12px;
+      background: #E2E8F0;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .meter-fill {
+      height: 100%;
+      border-radius: 999px;
+      transition: width 0.2s ease;
+    }
+
+    /* Metric Grid */
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    @media (max-width: 640px) {
+      .metric-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .metric-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+
+    .metric-card .m-label {
+      font-size: 0.77rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .metric-card .m-val {
+      font-size: 1.08rem;
+      font-weight: 700;
+      color: #0F172A;
+      margin-top: 2px;
+    }
+
+    .metric-card .m-sub {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Logbook Section */
+    .logbook-section {
+      margin-top: 20px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px;
+    }
+
+    .logbook-head {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 20px;
+      color: var(--text-muted);
+      font-size: 0.86rem;
+      background: var(--bg);
+      border: 1px dashed var(--border-strong);
+      border-radius: 8px;
+    }
+
+    /* Molecule Structure Viewer */
+    .mol-viewer-panel {
+      display: grid;
+      grid-template-columns: minmax(340px, 1.2fr) 1fr;
+      gap: 14px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      align-items: stretch;
+    }
+
+    @media (max-width: 860px) {
+      .mol-viewer-panel {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .mol-svg-wrap {
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 6px;
+    }
+
+    .mol-svg-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    svg#svg-molecule {
+      width: 100%;
+      height: auto;
+      max-height: 245px;
+      display: block;
+    }
+
+    .mol-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      font-size: 0.75rem;
+      color: #475569;
+      padding-top: 6px;
+      border-top: 1px solid var(--border);
+    }
+
+    .mol-legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .mol-legend .dot {
+      display: inline-block;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+    }
+
+    .mol-info-col {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .mol-meta-box {
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 9px 12px;
+      font-size: 0.82rem;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .m-meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .m-meta-k {
+      font-weight: 700;
+      color: #334155;
+      min-width: 68px;
+    }
+
+    .mol-meta-box code {
+      font-family: Consolas, Monaco, monospace;
+      font-size: 0.78rem;
+      background: var(--panel-sub);
+      padding: 1px 6px;
+      border-radius: 4px;
+      color: #0F172A;
+      word-break: break-all;
+    }
+
+    .hl-btns {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .hl-btn {
+      padding: 5px 9px;
+      font-size: 0.77rem;
+      font-weight: 600;
+      border: 1px solid var(--border-strong);
+      border-radius: 5px;
+      background: #FFFFFF;
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .hl-btn:hover {
+      background: var(--panel-sub);
+    }
+
+    .hl-btn.active {
+      background: #1E293B;
+      color: #FFFFFF;
+      border-color: #1E293B;
+    }
+
+    .mol-ph-state {
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--primary);
+      border-radius: 0 7px 7px 0;
+      padding: 9px 12px;
+      font-size: 0.81rem;
+      color: #334155;
+      line-height: 1.45;
+    }
+
+    /* Lead Optimization Functional Group Buttons */
+    .mod-lab-box {
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 9px 11px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .mod-btns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5px;
+    }
+
+    @media (max-width: 560px) {
+      .mod-btns {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .mod-btn {
+      padding: 6px 8px;
+      font-size: 0.76rem;
+      font-weight: 600;
+      border: 1px dashed #94A3B8;
+      border-radius: 5px;
+      background: var(--bg);
+      color: #334155;
+      cursor: pointer;
+      text-align: left;
+      line-height: 1.3;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+    }
+
+    .mod-btn:hover:not(:disabled) {
+      background: var(--panel-sub);
+      border-color: var(--purple);
+    }
+
+    .mod-btn:disabled {
+      opacity: 0.48;
+      cursor: not-allowed;
+      background: #F1F5F9;
+      border-color: #CBD5E1;
+      color: #94A3B8;
+    }
+
+    .mod-btn:disabled small {
+      color: #94A3B8;
+    }
+
+    .mod-btn.active {
+      background: #F5F3FF;
+      color: #5B21B6;
+      border-style: solid;
+      border-color: var(--purple);
+      box-shadow: inset 0 0 0 1px rgba(124, 58, 237, 0.25);
+    }
+
+    .mod-btn small {
+      display: block;
+      font-size: 0.69rem;
+      font-weight: 500;
+      color: #64748B;
+      margin-top: 1px;
+    }
+
+    .mod-btn.active small {
+      color: #6D28D9;
+    }
+
+    .mod-status-line {
+      font-size: 0.75rem;
+      color: #475569;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .segmented-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
+    .route-btns {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .route-btn {
+      padding: 5px 9px;
+      font-size: 0.77rem;
+      font-weight: 600;
+      border: 1px solid var(--border-strong);
+      border-radius: 5px;
+      background: var(--bg);
+      color: #334155;
+      cursor: pointer;
+    }
+
+    .route-btn.active {
+      background: var(--primary);
+      color: #FFFFFF;
+      border-color: var(--primary);
+    }
+
+    .log-note-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 12px;
+      padding: 10px 12px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+    }
+
+    .log-note-bar input[type="text"] {
+      flex: 1;
+      min-width: 220px;
+    }
+
+    .log-memo-edit {
+      width: 100%;
+      min-width: 140px;
+      padding: 4px 6px;
+      font-size: 0.78rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+    }
+
+    .badge.purple { background: #F5F3FF; color: #5B21B6; border: 1px solid #DDD6FE; }
+
+    /* Beginner Mode Visibility & Mode Switch */
+    body.mode-beginner .adv-only {
+      display: none !important;
+    }
+
+    .header-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .mode-switch {
+      display: inline-flex;
+      background: var(--panel-sub);
+      border: 1px solid var(--border-strong);
+      border-radius: 8px;
+      padding: 3px;
+      gap: 3px;
+    }
+
+    .mode-btn {
+      padding: 6px 12px;
+      font-size: 0.80rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    .mode-btn.active {
+      background: var(--primary);
+      color: #FFFFFF;
+    }
+
+    /* Mission Guide Strip */
+    .mission-banner {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--primary);
+      border-radius: 10px;
+      padding: 12px 16px;
+      margin-bottom: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .mission-head {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .mission-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .mission-btn {
+      padding: 5px 10px;
+      font-size: 0.79rem;
+      font-weight: 600;
+      border: 1px solid var(--border-strong);
+      border-radius: 999px;
+      background: var(--bg);
+      color: #334155;
+      cursor: pointer;
+    }
+
+    .mission-btn:hover {
+      background: var(--panel-sub);
+    }
+
+    .mission-btn.active {
+      background: #1E293B;
+      color: #FFFFFF;
+      border-color: #1E293B;
+    }
+
+    .mission-guide-box {
+      background: var(--primary-soft);
+      border: 1px solid #BFDBFE;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 0.82rem;
+      color: #1E3A8A;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .mission-steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    @media (max-width: 820px) {
+      .mission-steps {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .m-step-item {
+      background: #FFFFFF;
+      border: 1px solid #DBEAFE;
+      border-radius: 6px;
+      padding: 7px 9px;
+      color: #334155;
+      line-height: 1.45;
+      font-size: 0.79rem;
+    }
+
+    .m-step-item.done {
+      border-color: #6EE7B7;
+      background: #ECFDF5;
+      color: #065F46;
+    }
+
+    .mission-sub-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      margin-top: 2px;
+    }
+
+    /* Collapsible Advanced Sliders */
+    .slider-details {
+      border: 1px dashed var(--border-strong);
+      border-radius: 8px;
+      padding: 8px 10px;
+      background: var(--bg);
+    }
+
+    .slider-details summary {
+      cursor: pointer;
+      font-size: 0.80rem;
+      font-weight: 700;
+      color: #334155;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .slider-details summary::after {
+      content: "열기 ▾";
+      font-size: 0.74rem;
+      color: var(--primary);
+    }
+
+    .slider-details[open] summary {
+      margin-bottom: 10px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .slider-details[open] summary::after {
+      content: "접기 ▴";
+    }
+
+    /* Inline ? Glossary Tooltips */
+    .tip-wrap {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      margin-left: 4px;
+      vertical-align: middle;
+    }
+
+    .q-tip {
+      width: 17px;
+      height: 17px;
+      border-radius: 50%;
+      border: 1px solid #94A3B8;
+      background: #FFFFFF;
+      color: #475569;
+      font-size: 0.69rem;
+      font-weight: 700;
+      line-height: 1;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+
+    .q-tip:hover, .tip-wrap.open .q-tip {
+      background: var(--primary);
+      color: #FFFFFF;
+      border-color: var(--primary);
+    }
+
+    .tip-bubble {
+      display: none;
+      position: absolute;
+      left: 0;
+      top: 22px;
+      z-index: 40;
+      width: 245px;
+      background: #0F172A;
+      color: #F8FAFC;
+      font-size: 0.75rem;
+      font-weight: 400;
+      line-height: 1.45;
+      padding: 8px 10px;
+      border-radius: 7px;
+      box-shadow: 0 6px 18px rgba(15, 23, 42, 0.22);
+      pointer-events: none;
+    }
+
+    .tip-wrap:hover .tip-bubble,
+    .tip-wrap.open .tip-bubble {
+      display: block;
+    }
+
+    /* 1-Minute Quick Guide Modal */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.45);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .guide-modal {
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      max-width: 720px;
+      width: 100%;
+      max-height: 85vh;
+      overflow-y: auto;
+      padding: 20px 22px;
+      box-shadow: 0 14px 36px rgba(15, 23, 42, 0.22);
+    }
+
+    .guide-modal-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 10px;
+      margin-bottom: 14px;
+    }
+
+    /* Print CSS */
+    @media print {
+      body {
+        background: #FFFFFF;
+        padding: 0;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .card, header, .top-bar, .logbook-section {
+        box-shadow: none;
+        break-inside: avoid;
+      }
+      .tab-panel {
+        display: block !important;
+        margin-bottom: 18px;
+        page-break-after: always;
+      }
+      .main-grid {
+        grid-template-columns: 300px 1fr;
+      }
+    }
+  </style>
+</head>
+<body class="mode-beginner">
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <div class="header-title">
+        <h1>Chem-Screen: AI 신약 후보 화학 검증 시뮬레이터</h1>
+        <p>2022 개정 교육과정 『화학』 · 『물질과 에너지』 연계 — 신약개발 진로 화학동아리 탐구 도구</p>
+      </div>
+      <div class="header-actions no-print">
+        <div class="mode-switch" id="ui-mode-group" title="입문 모드에서는 핵심 물질 7종과 필수 그래프만 보여줍니다">
+          <button class="mode-btn active" data-uimode="beginner">입문 모드 (고2 탐구용)</button>
+          <button class="mode-btn" data-uimode="advanced">심화 모드 (전체 13종·고급 분석)</button>
+        </div>
+        <button class="btn" id="btn-open-guide">📖 1분 사용법 · 용어사전</button>
+      </div>
+    </header>
+
+    <!-- Mission Banner for Beginner Self-Guidance -->
+    <section class="mission-banner no-print" id="mission-banner">
+      <div class="mission-head">
+        <div class="mission-pills">
+          <span class="preset-label" style="margin-right:2px;">오늘의 탐구 미션:</span>
+          <button class="mission-btn active" data-mission="warmup">맛보기 · 아스피린</button>
+          <button class="mission-btn" data-mission="m1">미션 1 · AI 후보 C (위산 파괴 구하기)</button>
+          <button class="mission-btn" data-mission="m2">미션 2 · AI 후보 A·B (구조 고치기)</button>
+          <button class="mission-btn" data-mission="m3">미션 3 · 인슐린 · 후보 F (제형 구제)</button>
+        </div>
+        <span id="mission-progress-badge" class="badge info">진행 안내</span>
+      </div>
+      <div class="mission-guide-box" id="mission-guide-box"></div>
+    </section>
+
+    <!-- Top Preset & Status Bar -->
+    <section class="top-bar">
+      <div class="preset-row">
+        <div class="preset-group">
+          <span class="preset-label">물질 선택:</span>
+          <button class="preset-btn active" data-preset="aspirin">아스피린 (약산)</button>
+          <button class="preset-btn" data-preset="ibuprofen">이부프로펜 (약산)</button>
+          <button class="preset-btn" data-preset="lidocaine">리도카인 (약염기)</button>
+          <button class="preset-btn adv-only" data-preset="acetaminophen">아세트아미노펜 (중성형)</button>
+          <button class="preset-btn" data-preset="insulin">인슐린 (펩타이드)</button>
+          <button class="preset-btn adv-only" data-preset="metformin">메트포르민 (강염기)</button>
+          <button class="preset-btn adv-only" data-preset="propranolol">프로프라놀롤 (약염기)</button>
+          <button class="preset-btn ai-type" data-preset="candidateA">AI 후보 A</button>
+          <button class="preset-btn ai-type" data-preset="candidateB">AI 후보 B</button>
+          <button class="preset-btn ai-type" data-preset="candidateC">AI 후보 C</button>
+          <button class="preset-btn ai-type adv-only" data-preset="candidateD">AI 후보 D</button>
+          <button class="preset-btn ai-type adv-only" data-preset="candidateE">AI 후보 E</button>
+          <button class="preset-btn ai-type adv-only" data-preset="candidateF">AI 후보 F</button>
+          <button class="btn" id="btn-show-all-presets" style="padding:4px 9px; font-size:0.75rem; border-style:dashed;">+ 나머지 6종 더 보기 (심화)</button>
+        </div>
+        <div class="action-group no-print">
+          <button class="btn" id="btn-reset">현재 프리셋 초기화</button>
+          <button class="btn primary" id="btn-log">+ 실험 기록장에 추가</button>
+          <button class="btn" id="btn-print">결과 인쇄 / PDF 저장</button>
+        </div>
+      </div>
+
+      <div id="preset-desc-line" style="font-size:0.84rem; color:#475569;"></div>
+
+      <div class="mol-viewer-panel">
+        <div class="mol-svg-wrap">
+          <div class="mol-svg-head">
+            <span style="font-size:0.86rem; font-weight:700; color:#0F172A;">2D 분자 구조식 및 작용기 하이라이트</span>
+            <span class="badge info" id="mol-formula-badge">-</span>
+          </div>
+          <svg id="svg-molecule" viewBox="0 0 540 245"></svg>
+          <div class="mol-legend">
+            <span><i class="dot" style="background:#2563EB;"></i>친수성 (수소결합·극성)</span>
+            <span><i class="dot" style="background:#059669;"></i>친유성 (무극성·분산력)</span>
+            <span><i class="dot" style="background:#D97706;"></i>산·염기 이온화 부위</span>
+            <span><i class="dot" style="background:#DC2626;"></i>위산 가수분해 주의</span>
+          </div>
+        </div>
+
+        <div class="mol-info-col">
+          <div class="mol-meta-box">
+            <div class="m-meta-row"><span class="m-meta-k">분자 분류:</span> <span id="mol-class-text">-</span></div>
+            <div class="m-meta-row adv-only"><span class="m-meta-k">SMILES:</span> <code id="mol-smiles-text">-</code></div>
+            <div class="m-meta-row">
+              <span class="m-meta-k">표적 결합력:</span>
+              <span id="mol-dg-text">-</span>
+              <span class="tip-wrap"><button type="button" class="q-tip" aria-label="표적 결합력 설명">?</button><span class="tip-bubble">질병 원인 단백질(자물쇠)에 약물 분자(열쇠)가 얼마나 강하게 붙는지 보여줍니다. 음수 값이 클수록(예: -11 kcal/mol) 결합력이 좋습니다.</span></span>
+            </div>
+          </div>
+
+          <div>
+            <div style="font-size:0.79rem; font-weight:700; color:#475569; margin-bottom:5px;">작용기 집중 보기 (그림에서 색으로 강조):</div>
+            <div class="hl-btns no-print">
+              <button class="hl-btn active" data-hl="all">전체 표시</button>
+              <button class="hl-btn" data-hl="hydro">🔵 친수성 (수소결합)</button>
+              <button class="hl-btn" data-hl="lipo">🟢 친유성 (분산력)</button>
+              <button class="hl-btn" data-hl="ion">🟠 이온화 · 🔴 취약결합</button>
+            </div>
+          </div>
+
+          <div class="mod-lab-box no-print">
+            <div style="font-size:0.79rem; font-weight:700; color:#475569;">
+              작용기 바꿔 보기 (분자 구조 튜닝 · 2D 그림 연동):
+              <span class="tip-wrap"><button type="button" class="q-tip" aria-label="작용기 치환 설명">?</button><span class="tip-bubble">AI가 만든 분자의 약점을 고치는 버튼입니다. 버튼을 누르면 왼쪽 2D 분자 구조와 아래 1·2·3단계 합격 여부가 바로 바뀝니다!</span></span>
+            </div>
+            <div class="mod-btns">
+              <button class="mod-btn" data-mod="amide">에스터 → 아마이드 치환<small>위산에서 안 끊어지게 보호 (안정화)</small></button>
+              <button class="mod-btn" data-mod="shorten">소수성 사슬 단축 / 할로젠 제거<small>분자 크기·기름기(log P) 줄여 물에 잘 녹게</small></button>
+              <button class="mod-btn" data-mod="maskPolar">과도한 극성기(-OH) 메틸화 가리움<small>물만 붙잡는 -OH를 가려 세포막 통과 돕기</small></button>
+              <button class="mod-btn" data-mod="addIon">이온화 작용기 도입 / pKa 조절<small>소장 pH에서 물에 잘 녹는 이온 자리 추가</small></button>
+            </div>
+            <div class="mod-status-line">
+              <span id="mod-status-text">현재 개질: 원본 구조 그대로</span>
+              <button class="btn" id="btn-reset-mods" style="padding:2px 8px; font-size:0.73rem;">개질 해제</button>
+            </div>
+          </div>
+
+          <div class="mol-ph-state" id="mol-ph-state-box">-</div>
+        </div>
+      </div>
+
+      <div class="summary-strip">
+        <div class="summary-item">
+          <span class="s-title">1단계: 물성·안정성 스크리닝</span>
+          <span class="s-value" id="sum-step1">-</span>
+        </div>
+        <div class="summary-item">
+          <span class="s-title">2단계: 소장(pH 6.5) BCS 판정</span>
+          <span class="s-value" id="sum-step2">-</span>
+        </div>
+        <div class="summary-item">
+          <span class="s-title">3단계: 고분자 캡슐 유효시간</span>
+          <span class="s-value" id="sum-step3">-</span>
+        </div>
+        <div class="summary-item">
+          <span class="s-title">종합 신약 적합성 판정</span>
+          <span class="s-value" id="sum-overall">-</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tab Navigation -->
+    <nav class="tab-nav no-print" role="tablist">
+      <button class="tab-btn active" data-tab="tab1">
+        <div class="tab-step">STEP 1 · 주제 ④ (분자 간 상호작용과 용해도)</div>
+        <div class="tab-name">약물 후보 기본 물성 · 안정성 스크리닝</div>
+        <div class="tab-sub">수소결합·분산력 균형, 리핀스키 5법칙, AI 결합력-약물성 최적화</div>
+      </button>
+      <button class="tab-btn" data-tab="tab2">
+        <div class="tab-step">STEP 2 · 주제 ① (산·염기 평형과 pH 거동)</div>
+        <div class="tab-name">체내 pH별 이온화 · 등전점 · 이온 포획</div>
+        <div class="tab-sub">양쪽성 이온(pI), 위→소장→혈액 경로, 세포막 이온 포획 &amp; BCS</div>
+      </button>
+      <button class="tab-btn" data-tab="tab3">
+        <div class="tab-step">STEP 3 · 주제 ③ (물질의 확산과 지속방출)</div>
+        <div class="tab-name">고분자 캡슐 · 반복 투여 · 전달체 설계</div>
+        <div class="tab-sub">소화관 이동 모델, 반복 복용 비교, SNAC/LNP 투과 촉진 실험</div>
+      </button>
+    </nav>
+
+    <!-- ==================== TAB 1 ==================== -->
+    <section id="tab1" class="tab-panel active">
+      <div class="main-grid">
+        <!-- Left Controls -->
+        <div class="card controls">
+          <div class="card-title">
+            <span>분자 구조 · 인력 변수 조절</span>
+          </div>
+
+          <div class="equation-box" style="margin-top:0; margin-bottom:10px;">
+            <b>입문 가이드:</b> 먼저 위쪽 <b>[작용기 바꿔 보기]</b> 버튼 4개를 눌러 보고, 더 자세히 바꾸고 싶을 때만 아래 슬라이더를 여세요.
+          </div>
+
+          <details id="t1-slider-details" class="slider-details">
+            <summary>🔧 분자 수치 직접 조절하기 (MW · log P · 수소결합)</summary>
+
+            <div class="control-group">
+              <div class="control-label">
+                <span>분자량 (MW, g/mol)</span>
+                <span class="control-val" id="val-mw">180.2</span>
+              </div>
+              <input type="range" class="slider" id="inp-mw" min="100" max="700" step="5" value="180">
+              <span class="control-hint" id="hint-mw">분자 크기·전자 구름 증가 → 분산력 증가 (권장 ≤ 500)</span>
+            </div>
+
+            <div class="control-group">
+              <div class="control-label">
+                <span>친유성 지수 (log P)
+                  <span class="tip-wrap"><button type="button" class="q-tip">?</button><span class="tip-bubble">기름(세포막)을 좋아하는 정도입니다. 0보다 작으면 너무 물만 좋아해 막을 못 뚫고, 5보다 크면 물에 안 녹습니다.</span></span>
+                </span>
+                <span class="control-val" id="val-logp">1.19</span>
+              </div>
+              <input type="range" class="slider" id="inp-logp" min="-3.0" max="7.5" step="0.1" value="1.19">
+              <span class="control-hint">클수록 무극성 세포막 친화, 너무 크면 물에 불용 (권장 0~5)</span>
+            </div>
+
+            <div class="control-group">
+              <div class="control-label">
+                <span>수소결합 주개 수 (HBD: -OH, -NH)</span>
+                <span class="control-val" id="val-hbd">1</span>
+              </div>
+              <input type="range" class="slider" id="inp-hbd" min="0" max="10" step="1" value="1">
+              <span class="control-hint">물 분자와 수소결합 형성 능력 (권장 ≤ 5)</span>
+            </div>
+
+            <div class="control-group">
+              <div class="control-label">
+                <span>수소결합 받개 수 (HBA: N, O 원자)</span>
+                <span class="control-val" id="val-hba">4</span>
+              </div>
+              <input type="range" class="slider" id="inp-hba" min="0" max="15" step="1" value="4">
+              <span class="control-hint">비공유 전자쌍 수와 관련 (권장 ≤ 10)</span>
+            </div>
+
+            <div class="control-group">
+              <div class="control-label">
+                <span>극성 표면적 (TPSA, Å²)
+                  <span class="tip-wrap"><button type="button" class="q-tip">?</button><span class="tip-bubble">분자 겉면에서 극성 원자(O, N)가 차지하는 넓이입니다. 140 Å² 이하일수록 세포막 통과가 유리합니다.</span></span>
+                </span>
+                <span class="control-val" id="val-tpsa">63.6</span>
+              </div>
+              <input type="range" class="slider" id="inp-tpsa" min="10" max="220" step="2" value="63.6">
+              <span class="control-hint">쌍극자 인력·극성 영역 크기 (세포막 투과 권장 ≤ 140 Å²)</span>
+            </div>
+
+            <div class="control-group">
+              <div class="control-label">
+                <span>화학적 안정성 (위산 가수분해 민감도)</span>
+              </div>
+              <select id="inp-stability">
+                <option value="stable">안정 (아마이드/방향족 결합, 위산 내성 우수)</option>
+                <option value="caution">주의 (에스터 등 일부 가수분해 가능, 손실 ~20%)</option>
+                <option value="danger">위험 (강산에서 빠르게 분해됨, 위산 손실 ~65%)</option>
+              </select>
+            </div>
+          </details>
+        </div>
+
+        <!-- Right Visuals -->
+        <div class="viz-stack">
+          <div class="viz-two-col">
+            <div class="card">
+              <div class="card-title">
+                <span>5대 경구 약물성(Lipinski + TPSA) 레이더
+                  <span class="tip-wrap"><button type="button" class="q-tip">?</button><span class="tip-bubble">오각형 빨간 점선(기준치) 안쪽에 파란 면적이 잘 들어갈수록 알약으로 먹기 좋은 분자입니다.</span></span>
+                </span>
+                <span id="lipinski-badge" class="badge pass">통과</span>
+              </div>
+              <div class="svg-box">
+                <svg id="svg-radar" viewBox="0 0 420 340"></svg>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-title">
+                <span>분자 간 상호작용 균형 &amp; 고유 용해도</span>
+              </div>
+              <div class="meter-wrap" style="margin-bottom:14px;">
+                <div class="meter-item">
+                  <div class="meter-head">
+                    <span>친수성 인력 (물과의 수소결합 · 쌍극자 힘)</span>
+                    <span id="hydro-score-text">-</span>
+                  </div>
+                  <div class="meter-track">
+                    <div class="meter-fill" id="hydro-bar" style="width:50%; background:#2563EB;"></div>
+                  </div>
+                </div>
+
+                <div class="meter-item">
+                  <div class="meter-head">
+                    <span>친유성 인력 (세포막 지질과의 분산력)</span>
+                    <span id="lipo-score-text">-</span>
+                  </div>
+                  <div class="meter-track">
+                    <div class="meter-fill" id="lipo-bar" style="width:50%; background:#059669;"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="metric-grid" style="grid-template-columns: 1fr 1fr; margin-bottom:12px;">
+                <div class="metric-card">
+                  <div class="m-label">추정 고유 용해도 (log S₀)</div>
+                  <div class="m-val" id="t1-logs0">-</div>
+                  <div class="m-sub" id="t1-s0-mgl">-</div>
+                </div>
+                <div class="metric-card">
+                  <div class="m-label">리핀스키 규칙 위반 수</div>
+                  <div class="m-val" id="t1-violations">-</div>
+                  <div class="m-sub">허용 기준: 0~1개</div>
+                </div>
+              </div>
+
+              <table class="data-table" id="lipinski-table">
+                <thead>
+                  <tr>
+                    <th>검증 항목</th>
+                    <th>기준</th>
+                    <th>현재값</th>
+                    <th>판정</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card adv-only">
+            <div class="card-title">
+              <span>AI 표적 결합력 vs 경구 생체이용률 다목적 최적화 (Pareto 분석)</span>
+              <span id="pareto-badge" class="badge info">분석 중</span>
+            </div>
+            <div class="svg-box">
+              <svg id="svg-pareto" viewBox="0 0 760 255"></svg>
+            </div>
+            <div id="pareto-summary" style="font-size:0.81rem; color:#475569; margin-top:8px;">-</div>
+          </div>
+
+          <div id="t1-diagnosis" class="diag-box">
+            <h4>화학적 진단 결과</h4>
+            <p id="t1-diag-text">-</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 2 ==================== -->
+    <section id="tab2" class="tab-panel">
+      <div class="main-grid">
+        <!-- Left Controls -->
+        <div class="card controls">
+          <div class="card-title">
+            <span>체내 pH 변화 &amp; 산·염기 평형</span>
+          </div>
+
+          <div class="control-group">
+            <div class="control-label">
+              <span>관찰 환경 pH (장기를 눌러 비교해 보세요)</span>
+              <span class="control-val" id="val-ph">1.5</span>
+            </div>
+            <input type="range" class="slider" id="inp-ph" min="1.0" max="9.0" step="0.1" value="1.5">
+            <div class="organ-btns" style="margin-top:4px;">
+              <button class="organ-btn active" data-ph="1.5">위 (pH 1.5)</button>
+              <button class="organ-btn adv-only" data-ph="4.8">세포 리소좀 (4.8)</button>
+              <button class="organ-btn adv-only" data-ph="6.0">십이지장 (6.0)</button>
+              <button class="organ-btn" data-ph="6.5">소장 (6.5)</button>
+              <button class="organ-btn" data-ph="7.4">혈액 (7.4)</button>
+            </div>
+          </div>
+
+          <details id="t2-slider-details" class="slider-details">
+            <summary>🔧 산·염기 유형 및 pKa 직접 조절하기</summary>
+
+            <div class="control-group">
+              <div class="control-label">
+                <span>브뢴스테드-로리 산·염기 유형</span>
+              </div>
+              <div class="segmented-2" id="acid-type-group">
+                <button class="seg-btn active" data-type="acid">약산성 (HA)</button>
+                <button class="seg-btn" data-type="base">약염기성 (B)</button>
+                <button class="seg-btn" data-type="zwitter">양쪽성 (pK<sub>a1</sub>·pK<sub>a2</sub>)</button>
+                <button class="seg-btn" data-type="neutral">비이온 중성</button>
+              </div>
+              <span class="control-hint" id="type-chem-hint">약산성 HA ⇌ H⁺ + A⁻ (pH가 높을수록 이온화 증가)</span>
+            </div>
+
+            <div class="control-group" id="pka-control-group">
+              <div class="control-label">
+                <span id="lbl-pka">산 해리 지수 (pK<sub>a</sub>)</span>
+                <span class="control-val" id="val-pka">3.5</span>
+              </div>
+              <input type="range" class="slider" id="inp-pka" min="1.5" max="12.0" step="0.1" value="3.5">
+              <span class="control-hint" id="hint-pka">이온화 분율과 비이온화 분율이 50% : 50%가 되는 pH</span>
+            </div>
+
+            <div class="control-group" id="pka2-control-group" style="display:none;">
+              <div class="control-label">
+                <span>염기성기 해리 지수 (pK<sub>a2</sub>)</span>
+                <span class="control-val" id="val-pka2">8.6</span>
+              </div>
+              <input type="range" class="slider" id="inp-pka2" min="4.5" max="12.5" step="0.1" value="8.6">
+              <span class="control-hint">등전점 pI = (pK<sub>a1</sub> + pK<sub>a2</sub>)/2 = <b id="val-pi">6.4</b> (알짜 전하 0 · 용해도 최소 지점)</span>
+            </div>
+
+            <div class="control-group">
+              <div class="control-label">
+                <span>비이온화(중성) 고유 용해도 (log S₀)</span>
+                <span class="control-val" id="val-logs0">-1.65</span>
+              </div>
+              <input type="range" class="slider" id="inp-logs0" min="-7.5" max="0.0" step="0.05" value="-1.65">
+              <span class="control-hint">알짜 전하가 0인 상태에서의 물 용해도 (mol/L의 상용로그)</span>
+            </div>
+          </details>
+
+          <div class="equation-box">
+            <strong>핵심 원리 (고2 화학 · 산·염기 평형):</strong><br>
+            • <b>이온형(전하 띰)</b> → 물에 잘 녹지만 세포막 통과 어려움<br>
+            • <b>중성형(전하 0)</b> → 기름막(세포막)을 잘 통과함<br>
+            • 양쪽성(`인슐린`)은 등전점 <code>pI</code>에서 전하 0 → U자형 용해도 최소
+          </div>
+        </div>
+
+        <!-- Right Visuals -->
+        <div class="viz-stack">
+          <div class="card">
+            <div class="card-title">
+              <span>pH 변화(1.0~9.0)에 따른 이온화 분율 및 용해도·투과성 상충 곡선</span>
+              <span class="badge info" id="t2-current-organ">현재: 위 (pH 1.5)</span>
+            </div>
+            <div class="svg-box">
+              <svg id="svg-ph-curves" viewBox="0 0 760 350"></svg>
+            </div>
+          </div>
+
+          <div class="viz-two-col">
+            <div class="card">
+              <div class="card-title">
+                <span>체내 장기별 정량 거동 비교</span>
+              </div>
+              <table class="data-table" id="organ-compare-table">
+                <thead>
+                  <tr>
+                    <th>체내 환경</th>
+                    <th>중성(%)</th>
+                    <th>이온(%)</th>
+                    <th>log S<sub>pH</sub></th>
+                    <th>log D<sub>pH</sub></th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+
+            <div class="card">
+              <div class="card-title">
+                <span>BCS 약물 분류체계 (소장 pH 6.5 기준)
+                  <span class="tip-wrap"><button type="button" class="q-tip">?</button><span class="tip-bubble">소장에서 물에 잘 녹고(용해도) 세포막도 잘 뚫으면(투과성) 최고 등급인 Class I(오른쪽 위)입니다.</span></span>
+                </span>
+                <span id="bcs-badge" class="badge pass">Class I</span>
+              </div>
+              <div class="svg-box">
+                <svg id="svg-bcs" viewBox="0 0 360 220"></svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="card adv-only">
+            <div class="card-title">
+              <span>세포막 경계 이온 포획 (Ion Trapping) 시뮬레이션</span>
+              <span id="trap-ratio-badge" class="badge info">축적비 계산</span>
+            </div>
+            <div class="route-btns no-print" id="trap-route-group" style="margin-bottom:10px;">
+              <button class="route-btn active" data-route="stomach-blood">위 (pH 1.5) ↔ 점막세포·혈액 (pH 7.4)</button>
+              <button class="route-btn" data-route="intestine-blood">소장 (pH 6.5) ↔ 혈액 (pH 7.4)</button>
+              <button class="route-btn" data-route="cytosol-lysosome">세포질 (pH 7.2) ↔ 리소좀 (pH 4.8)</button>
+            </div>
+            <div class="svg-box">
+              <svg id="svg-ion-trap" viewBox="0 0 760 205"></svg>
+            </div>
+            <div id="ion-trap-desc" style="font-size:0.82rem; color:#334155; margin-top:8px; line-height:1.5;">-</div>
+          </div>
+
+          <div id="t2-diagnosis" class="diag-box">
+            <h4>체내 pH 거동 화학 해석</h4>
+            <p id="t2-diag-text">-</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 3 ==================== -->
+    <section id="tab3" class="tab-panel">
+      <div class="main-grid">
+        <!-- Left Controls -->
+        <div class="card controls">
+          <div class="card-title">
+            <span>고분자 캡슐 제형 설계 변수</span>
+          </div>
+
+          <div class="control-group adv-only">
+            <div class="control-label">
+              <span>투여 요법 비교 모드</span>
+            </div>
+            <div class="segmented-2" id="dose-mode-group">
+              <button class="seg-btn active" data-dmode="single">1일 1회 단회 비교</button>
+              <button class="seg-btn" data-dmode="multi3">속방 8h×3회 vs 캡슐 1회</button>
+            </div>
+            <span class="control-hint" id="dose-mode-hint">단회 복용 시 초기 폭발 방출 억제 효과 관찰</span>
+          </div>
+
+          <div class="control-group">
+            <div class="control-label">
+              <span>고분자 캡슐 막 두께 (L)
+                <span class="tip-wrap"><button type="button" class="q-tip">?</button><span class="tip-bubble">캡슐 껍질이 두꺼울수록 약물 확산 거리가 길어져 천천히 오래 나옵니다(픽의 확산 법칙).</span></span>
+              </span>
+              <span class="control-val" id="val-thick">70 μm</span>
+            </div>
+            <input type="range" class="slider" id="inp-thick" min="10" max="200" step="5" value="70">
+            <span class="control-hint">두꺼울수록 확산 거리가 길어져 방출 속도 감소 (J ∝ 1/L)</span>
+          </div>
+
+          <div class="toggle-row">
+            <div>
+              <div>pH 감응성 장용성 코팅 적용</div>
+              <div style="font-size:0.74rem; color:var(--text-muted); font-weight:400;">위(0~1.5h, pH 1.5)에서 막을 닫아 약물 보호 후 소장(pH 6.5) 방출</div>
+            </div>
+            <input type="checkbox" id="inp-enteric" checked style="width:18px; height:18px; cursor:pointer;">
+          </div>
+
+          <div class="toggle-row">
+            <div>
+              <div>투과 촉진제 · 나노전달체 (SNAC/LNP) 병용
+                <span class="tip-wrap"><button type="button" class="q-tip">?</button><span class="tip-bubble">인슐린처럼 크기가 크거나 극성이 큰 약물이 장 세포막을 지나가도록 돕는 특수 전달체입니다.</span></span>
+              </div>
+              <div style="font-size:0.74rem; color:var(--text-muted); font-weight:400;">거대분자·고극성(BCS III)의 상피세포 투과 및 효소 분해 방어</div>
+            </div>
+            <input type="checkbox" id="inp-enhancer" style="width:18px; height:18px; cursor:pointer;">
+          </div>
+
+          <details id="t3-slider-details" class="slider-details">
+            <summary>🔧 확산 계수 · 반감기 · 투여 용량 세부 조절</summary>
+
+            <div class="control-group">
+              <div class="control-label">
+                <span>고분자 기공 확산 계수 (D<sub>eff</sub> 배율)</span>
+                <span class="control-val" id="val-diff">1.0×</span>
+              </div>
+              <input type="range" class="slider" id="inp-diff" min="0.2" max="2.5" step="0.1" value="1.0">
+              <span class="control-hint">고분자 사슬 간격·기공률에 따른 약물 이동 속도</span>
+            </div>
+
+            <div class="control-group">
+              <div class="control-label">
+                <span>약물 체내 반감기 (t<sub>1/2</sub>)</span>
+                <span class="control-val" id="val-halflife">3.2 h</span>
+              </div>
+              <input type="range" class="slider" id="inp-halflife" min="0.8" max="8.0" step="0.1" value="3.2">
+              <span class="control-hint">혈중 농도가 절반으로 줄어드는 데 걸리는 시간</span>
+            </div>
+
+            <div class="control-group">
+              <div class="control-label">
+                <span>1회 투여 용량 (D<sub>0</sub>)</span>
+                <span class="control-val" id="val-dose">160 mg</span>
+              </div>
+              <input type="range" class="slider" id="inp-dose" min="50" max="300" step="10" value="160">
+              <span class="control-hint">유효 농도(MEC 1.8) ~ 독성 농도(MTC 7.5 mg/L) 유지 목표</span>
+            </div>
+          </details>
+
+          <div class="equation-box">
+            <strong>핵심 원리 (픽의 확산 법칙 &amp; 소화관 이동):</strong><br>
+            <code>방출 속도(J) = D · ΔC / L</code><br>
+            목표는 파란 선(고분자 캡슐)이 <b>초록/파란 안전 띠(MEC 1.8 ~ MTC 7.5)</b> 안에 최대한 오래 머물게 만드는 것입니다.
+          </div>
+        </div>
+
+        <!-- Right Visuals -->
+        <div class="viz-stack">
+          <div class="card">
+            <div class="card-title">
+              <span>24시간 혈중 약물 농도 곡선 비교: 일반 속방정 vs 고분자 캡슐</span>
+              <span id="t3-opt-badge" class="badge pass">치료 구간 유지 양호</span>
+            </div>
+            <div class="svg-box">
+              <svg id="svg-pk" viewBox="0 0 760 340"></svg>
+            </div>
+          </div>
+
+          <div class="viz-two-col">
+            <div class="card">
+              <div class="card-title">
+                <span>고분자 캡슐 단면 · 확산 모식도</span>
+              </div>
+              <div class="svg-box">
+                <svg id="svg-capsule" viewBox="0 0 360 190"></svg>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-title">
+                <span>제형 비교 정량 지표</span>
+              </div>
+              <div class="metric-grid" style="grid-template-columns: 1fr 1fr; gap:8px;">
+                <div class="metric-card">
+                  <div class="m-label">캡슐 유효 농도 유지 시간</div>
+                  <div class="m-val" id="m-cap-time">-</div>
+                  <div class="m-sub" id="m-ir-time">속방정: -</div>
+                </div>
+                <div class="metric-card">
+                  <div class="m-label">캡슐 최고 농도 (C<sub>max</sub>)</div>
+                  <div class="m-val" id="m-cap-cmax">-</div>
+                  <div class="m-sub" id="m-ir-cmax">속방정: -</div>
+                </div>
+                <div class="metric-card">
+                  <div class="m-label">위산 분해 손실률</div>
+                  <div class="m-val" id="m-cap-loss">-</div>
+                  <div class="m-sub" id="m-ir-loss">속방정: -</div>
+                </div>
+                <div class="metric-card">
+                  <div class="m-label">권장 최적 캡슐 두께</div>
+                  <div class="m-val" id="m-opt-thick">-</div>
+                  <div class="m-sub">현재 조건 자동 탐색</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="t3-diagnosis" class="diag-box">
+            <h4>지속방출 제형 설계 진단</h4>
+            <p id="t3-diag-text">-</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== EXPERIMENT LOGBOOK ==================== -->
+    <section class="logbook-section">
+      <div class="logbook-head">
+        <div>
+          <h2 style="font-size:1.05rem; font-weight:700;">동아리 탐구 실험 기록장 (개질 전·후 비교 및 자동 저장)</h2>
+          <p style="font-size:0.82rem; color:var(--text-muted);">작용기 치환·pH·캡슐 조건을 바꾼 뒤 고찰 메모를 적고 기록하면 원본(Before) 대비 개선(After) 변화가 누적되며 브라우저에 자동 저장됩니다.</p>
+        </div>
+        <div class="action-group no-print">
+          <button class="btn" id="btn-export-csv">CSV 다운로드</button>
+          <button class="btn" id="btn-clear-log">기록장 비우기</button>
+        </div>
+      </div>
+      <div class="log-note-bar no-print">
+        <input type="text" id="inp-log-note" placeholder="탐구 가설 또는 화학적 결론 메모 입력 (예: 사슬 단축 + 아민 도입으로 BCS II→I 개선)..." />
+        <button class="btn primary" id="btn-log-inline">+ 현재 조건 비교 기록</button>
+      </div>
+      <div id="logbook-container">
+        <div class="empty-state">아직 기록된 실험 조건이 없습니다. 시뮬레이터를 조작한 뒤 <b>[+ 실험 기록장에 추가]</b> 또는 <b>[+ 현재 조건 비교 기록]</b>을 눌러 데이터를 저장하세요.</div>
+      </div>
+    </section>
+  </div>
+
+  <!-- 1-Minute Quick Guide & High School Glossary Modal -->
+  <div id="guide-modal-backdrop" class="modal-backdrop no-print" role="dialog" aria-modal="true" aria-labelledby="guide-modal-title">
+    <div class="guide-modal">
+      <div class="guide-modal-head">
+        <h2 id="guide-modal-title" style="font-size:1.1rem; font-weight:700; color:#0F172A;">📖 1분 사용법 &amp; 고2 화학 쉬운 용어사전</h2>
+        <button class="btn" id="btn-close-guide">닫기 ✕</button>
+      </div>
+      <div style="font-size:0.84rem; color:#334155; display:flex; flex-direction:column; gap:12px; line-height:1.55;">
+        <div style="background:#EFF6FF; border:1px solid #BFDBFE; border-radius:8px; padding:10px 12px;">
+          <b>🎯 혼자 실험하는 4단계 순서</b><br>
+          <b>1)</b> 맨 위 <b>[오늘의 탐구 미션]</b> 또는 <b>[물질 선택]</b>에서 실험할 약물(예: AI 후보 C)을 고르세요.<br>
+          <b>2)</b> 가운데 <b>STEP 1 · 2 · 3</b> 요약 4칸 중 빨강/노랑 경고가 뜬 원인을 확인하세요.<br>
+          <b>3)</b> 상단 <b>[작용기 바꿔 보기]</b> 버튼 4개(입문 핵심!) 또는 STEP 3 <b>장용성 코팅·SNAC·캡슐 두께</b>를 조절해 통과시켜 보세요.<br>
+          <b>4)</b> 맨 아래 <b>[실험 기록장]</b>에 관찰한 이유 한 줄을 적고 저장한 뒤 <b>CSV 다운로드</b>를 누르세요!
+        </div>
+
+        <div>
+          <h3 style="font-size:0.92rem; margin-bottom:6px; color:#0F172A;">🔤 화면 용어 → 고2 교과서 쉬운 뜻</h3>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>화면 용어</th>
+                <th>쉬운 뜻 (『화학』·『물질과 에너지』 연결)</th>
+                <th>좋은 기준</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td><b>ΔG<sub>bind</sub></b> (결합력)</td><td>질병 단백질(자물쇠)에 약물이 얼마나 세게 붙는지 나타내는 점수</td><td>음수 값이 클수록 결합 강함 (예: -11)</td></tr>
+              <tr><td><b>log P</b> (친유성)</td><td>기름(세포막)을 좋아하는 정도 vs 물을 좋아하는 정도</td><td>0 ~ 5 (너무 크면 물에 불용)</td></tr>
+              <tr><td><b>HBD / HBA</b></td><td>물과 <b>수소 결합</b>을 하는 팔(주개·받개) 개수</td><td>HBD ≤ 5, HBA ≤ 10</td></tr>
+              <tr><td><b>TPSA</b> (극성 표면적)</td><td>분자 겉면에서 극성(O, N)이 차지하는 넓이</td><td>≤ 140 Å² (넓으면 막 통과 어려움)</td></tr>
+              <tr><td><b>pK<sub>a</sub> · 등전점 pI</b></td><td>분자 절반이 이온이 되는 pH / 양쪽성 분자의 알짜전하 0 지점</td><td>인슐린 pI=6.4에서 용해도 최저(U자)</td></tr>
+              <tr><td><b>BCS Class I~IV</b></td><td>소장에서 <b>물에 녹는 정도 × 막 뚫는 정도</b> 4등급 성적표</td><td>Class I = 둘 다 합격!</td></tr>
+              <tr><td><b>MEC ~ MTC</b></td><td>약효가 나는 최소 농도(1.8) ~ 독성이 생기는 농도(7.5 mg/L)</td><td>파란 캡슐 선이 이 사이에 오래 머물수록 좋음</td></tr>
+              <tr><td><b>SNAC / LNP</b></td><td>인슐린처럼 크고 극성인 약물이 장 벽을 넘도록 돕는 특수 전달체</td><td>장용성 코팅과 함께 켜면 흡수 상승</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ==================== 1. PRESET DATA ====================
+    const PRESETS = {
+      aspirin: {
+        name: "아스피린 (Aspirin)",
+        formula: "C₉H₈O₄",
+        molClass: "시판 해열진통제 (살리실산 유도체)",
+        smiles: "CC(=O)Oc1ccccc1C(=O)O",
+        mw: 180.2, logP: 1.19, hbd: 1, hba: 4, tpsa: 63.6,
+        stability: "caution",
+        type: "acid", pka: 3.5, pka2: 8.5, logS0: -1.65, dgBind: -7.6,
+        halfLife: 3.2, dose: 160, thick: 70, diff: 1.0, enteric: true, enhancer: false,
+        desc: "해열·진통제 대표 약산성 약물. 카복실기(-COOH)와 에스터기(-COO-)를 가져 위산에서 일부 가수분해될 수 있으나 전체 물성 균형이 우수함."
+      },
+      ibuprofen: {
+        name: "이부프로펜 (Ibuprofen)",
+        formula: "C₁₃H₁₈O₂",
+        molClass: "시판 소염진통제 (프로피온산 유도체)",
+        smiles: "CC(C)Cc1ccc(cc1)C(C)C(=O)O",
+        mw: 206.3, logP: 3.97, hbd: 1, hba: 2, tpsa: 37.3,
+        stability: "stable",
+        type: "acid", pka: 4.9, pka2: 8.5, logS0: -3.90, dgBind: -8.3,
+        halfLife: 2.0, dose: 160, thick: 60, diff: 1.0, enteric: false, enhancer: false,
+        desc: "소염진통제. 중성 분자 상태에서는 분산력이 커 물에 잘 녹지 않으나(log S₀ = -3.90), 소장·혈액(pH 6.5~7.4)에서 이온화되어 용해도가 수십 배 이상 급증함."
+      },
+      lidocaine: {
+        name: "리도카인 (Lidocaine)",
+        formula: "C₁₄H₂₂N₂O",
+        molClass: "시판 국소마취제 (아마이드·3차 아민계)",
+        smiles: "CCN(CC)CC(=O)Nc1c(C)cccc1C",
+        mw: 234.3, logP: 2.44, hbd: 1, hba: 2, tpsa: 32.3,
+        stability: "stable",
+        type: "base", pka: 7.9, pka2: 8.5, logS0: -1.76, dgBind: -7.9,
+        halfLife: 1.8, dose: 150, thick: 65, diff: 1.0, enteric: false, enhancer: false,
+        desc: "대표 약염기성 약물. 3차 아민기(-NR₂)를 가져 산성 환경에서는 H⁺를 받아 양이온이 되어 물에 잘 녹고, 중성/약염기성에서 세포막 투과도가 높아짐."
+      },
+      acetaminophen: {
+        name: "아세트아미노펜 (Acetaminophen)",
+        formula: "C₈H₉NO₂",
+        molClass: "시판 해열진통제 (아닐린·페놀 유도체)",
+        smiles: "CC(=O)Nc1ccc(O)cc1",
+        mw: 151.2, logP: 0.46, hbd: 2, hba: 2, tpsa: 49.3,
+        stability: "stable",
+        type: "acid", pka: 9.5, pka2: 8.5, logS0: -1.03, dgBind: -7.0,
+        halfLife: 2.5, dose: 160, thick: 60, diff: 1.0, enteric: false, enhancer: false,
+        desc: "pKa가 9.5로 매우 높아 위(1.5)·소장(6.5)·혈액(7.4) 전 구간에서 거의 비이온화(중성) 상태로 유지되며 용해도와 투과성이 안정적임."
+      },
+      insulin: {
+        name: "인슐린 (Insulin, 펩타이드 호르몬)",
+        formula: "C₂₅₇H₃₈₃N₆₅O₇₇S₆ (51 아미노산 펩타이드)",
+        molClass: "시판 당뇨병 주사제 (양쪽성 펩타이드·단백질 호르몬)",
+        smiles: "H-GIVEQCCTSICSLYQLENYCN-OH (핵심 다이설파이드 펩타이드 사슬)",
+        mw: 5808.0, logP: -2.40, hbd: 10, hba: 15, tpsa: 220.0,
+        stability: "danger",
+        type: "zwitter", pka: 4.2, pka2: 8.6, logS0: -0.40, dgBind: -11.4,
+        halfLife: 1.5, dose: 180, thick: 60, diff: 0.4, enteric: true, enhancer: false,
+        desc: "혈당 조절 양쪽성 펩타이드 호르몬(pKa1 4.2, pKa2 8.6, 등전점 pI 6.4). 분자량(5,808 Da)과 극성 표면적이 커 세포막 투과가 어렵고(BCS III) 위산·효소에 분해되어, Step 3에서 장용성+SNAC/LNP 병용으로 경구 전달 한계를 실험할 수 있음."
+      },
+      metformin: {
+        name: "메트포르민 (Metformin)",
+        formula: "C₄H₁₁N₅",
+        molClass: "시판 경구용 당뇨병 치료제 (바이구아나이드계 강염기)",
+        smiles: "CN(C)C(=N)NC(=N)N",
+        mw: 129.2, logP: -1.43, hbd: 4, hba: 5, tpsa: 88.9,
+        stability: "stable",
+        type: "base", pka: 11.5, pka2: 8.5, logS0: -0.20, dgBind: -7.2,
+        halfLife: 4.5, dose: 200, thick: 85, diff: 1.0, enteric: false, enhancer: false,
+        desc: "경구용 제2형 당뇨병 1차 치료제. 인슐린과 달리 저분자이고 위산에 안정하나, 강염기(pKa 11.5)여서 체내 전 구간에서 양이온화되어 물에는 매우 잘 녹고 수동 막 투과는 느린 BCS Class III 약물임."
+      },
+      propranolol: {
+        name: "프로프라놀롤 (Propranolol)",
+        formula: "C₁₆H₂₁NO₂",
+        molClass: "시판 고혈압·부정맥 치료제 (베타차단제·나프탈렌 유도체)",
+        smiles: "CC(C)NCC(O)COc1cccc2ccccc12",
+        mw: 259.3, logP: 3.48, hbd: 2, hba: 3, tpsa: 41.5,
+        stability: "stable",
+        type: "base", pka: 9.4, pka2: 8.5, logS0: -3.30, dgBind: -8.9,
+        halfLife: 3.8, dose: 160, thick: 75, diff: 1.0, enteric: false, enhancer: false,
+        desc: "대표적 교감신경 베타차단제. 무극성 나프탈렌 고리(높은 친유성, log P 3.48)와 약염기성 2차 아민(pKa 9.4)을 함께 가져 위·소장에서 양이온화로 용해도가 크게 증가하는 BCS Class I 약물임."
+      },
+      candidateA: {
+        name: "AI 후보 A",
+        formula: "C₃₈H₄₄O₂ (가상 설계)",
+        molClass: "AI 제안 가상 후보 물질 A",
+        smiles: "CCCCCCCCc1ccc(cc1)c2ccc3cc(OC)c(OC)cc3c2",
+        mw: 560.0, logP: 6.20, hbd: 0, hba: 2, tpsa: 22.0,
+        stability: "stable",
+        type: "neutral", pka: 7.0, pka2: 8.5, logS0: -6.80, dgBind: -11.2,
+        halfLife: 6.0, dose: 150, thick: 50, diff: 1.0, enteric: false, enhancer: false,
+        desc: "AI가 표적 단백질 결합 점수를 바탕으로 제안한 가상 후보 물질 A입니다. 아래 분자 구조와 작용기 치환 실험실·STEP 1~3 시뮬레이션으로 물성·흡수·제형 특성을 검증해 보세요."
+      },
+      candidateB: {
+        name: "AI 후보 B",
+        formula: "C₁₃H₂₆N₄O₉ (가상 설계)",
+        molClass: "AI 제안 가상 후보 물질 B",
+        smiles: "NCC(=O)NC(CO)C(O)C(O)C(O)NC(=O)C(O)CO",
+        mw: 410.0, logP: -1.80, hbd: 8, hba: 12, tpsa: 175.0,
+        stability: "stable",
+        type: "base", pka: 9.2, pka2: 8.5, logS0: -0.50, dgBind: -10.8,
+        halfLife: 1.5, dose: 150, thick: 60, diff: 1.0, enteric: false, enhancer: false,
+        desc: "AI가 표적 단백질 결합 점수를 바탕으로 제안한 가상 후보 물질 B입니다. 아래 분자 구조와 작용기 치환 실험실·STEP 1~3 시뮬레이션으로 물성·흡수·제형 특성을 검증해 보세요."
+      },
+      candidateC: {
+        name: "AI 후보 C",
+        formula: "C₁₉H₂₀O₅ (가상 설계)",
+        molClass: "AI 제안 가상 후보 물질 C",
+        smiles: "CC(C(=O)O)c1ccc(OC(=O)CCc2ccc(OC)cc2)cc1",
+        mw: 310.0, logP: 2.60, hbd: 2, hba: 5, tpsa: 72.0,
+        stability: "danger",
+        type: "acid", pka: 4.4, pka2: 8.5, logS0: -2.80, dgBind: -10.3,
+        halfLife: 1.1, dose: 200, thick: 55, diff: 1.0, enteric: true, enhancer: false,
+        desc: "AI가 표적 단백질 결합 점수를 바탕으로 제안한 가상 후보 물질 C입니다. 아래 분자 구조와 작용기 치환 실험실·STEP 1~3 시뮬레이션으로 물성·흡수·제형 특성을 검증해 보세요."
+      },
+      candidateD: {
+        name: "AI 후보 D",
+        formula: "C₂₀H₂₄Cl₂N₂O (가상 설계)",
+        molClass: "AI 제안 가상 후보 물질 D",
+        smiles: "CCN(CC)CCc1ccc(NC(=O)c2ccc(Cl)c(Cl)c2)cc1",
+        mw: 379.3, logP: 4.35, hbd: 1, hba: 3, tpsa: 32.3,
+        stability: "stable",
+        type: "base", pka: 8.6, pka2: 8.5, logS0: -3.95, dgBind: -9.8,
+        halfLife: 4.2, dose: 150, thick: 80, diff: 1.0, enteric: false, enhancer: false,
+        desc: "AI가 표적 단백질 결합 점수를 바탕으로 제안한 가상 후보 물질 D입니다. 아래 분자 구조와 작용기 치환 실험실·STEP 1~3 시뮬레이션으로 물성·흡수·제형 특성을 검증해 보세요."
+      },
+      candidateE: {
+        name: "AI 후보 E",
+        formula: "C₂₈H₃₆N₂O₈ (가상 설계)",
+        molClass: "AI 제안 가상 후보 물질 E",
+        smiles: "CC(C)Cc1ccc(cc1)C(=O)NC(CO)C(O)C(O)C(=O)Nc2ccc(cc2)C(C)C",
+        mw: 536.6, logP: 0.10, hbd: 6, hba: 10, tpsa: 158.0,
+        stability: "caution",
+        type: "neutral", pka: 7.0, pka2: 8.5, logS0: -3.40, dgBind: -11.6,
+        halfLife: 2.8, dose: 180, thick: 65, diff: 0.7, enteric: false, enhancer: false,
+        desc: "AI가 표적 단백질 결합 점수를 바탕으로 제안한 가상 후보 물질 E입니다. 아래 분자 구조와 작용기 치환 실험실·STEP 1~3 시뮬레이션으로 물성·흡수·제형 특성을 검증해 보세요."
+      },
+      candidateF: {
+        name: "AI 후보 F",
+        formula: "C₁₅H₁₉NO₄ (가상 설계)",
+        molClass: "AI 제안 가상 후보 물질 F",
+        smiles: "CCOc1ccc(CC(=O)NC(C)CC(=O)O)cc1",
+        mw: 277.3, logP: 1.85, hbd: 2, hba: 5, tpsa: 75.6,
+        stability: "caution",
+        type: "acid", pka: 4.2, pka2: 8.5, logS0: -2.35, dgBind: -9.5,
+        halfLife: 1.2, dose: 240, thick: 20, diff: 1.4, enteric: false, enhancer: false,
+        desc: "AI가 표적 단백질 결합 점수를 바탕으로 제안한 가상 후보 물질 F입니다. 아래 분자 구조와 작용기 치환 실험실·STEP 1~3 시뮬레이션으로 물성·흡수·제형 특성을 검증해 보세요."
+      }
+    };
+
+    const ORGANS = [
+      { name: "위 (공복)", ph: 1.5 },
+      { name: "세포 리소좀", ph: 4.8 },
+      { name: "십이지장", ph: 6.0 },
+      { name: "소장 (주 흡수)", ph: 6.5 },
+      { name: "혈액 (체순환)", ph: 7.4 }
+    ];
+
+    const TRAP_ROUTES = {
+      "stomach-blood": { name1: "위 내강", ph1: 1.5, name2: "위 점막·혈액", ph2: 7.4 },
+      "intestine-blood": { name1: "소장 내강", ph1: 6.5, name2: "혈액", ph2: 7.4 },
+      "cytosol-lysosome": { name1: "세포질", ph1: 7.2, name2: "세포 리소좀", ph2: 4.8 }
+    };
+
+    const MOD_LABELS = {
+      amide: "아마이드 치환",
+      shorten: "사슬 단축",
+      maskPolar: "극성기(-OH) 메틸화",
+      addIon: "이온기·pKa 조절"
+    };
+
+    const MOD_BASE_UI = {
+      amide: { title: "에스터 → 아마이드 치환", noReason: "치환할 에스터(-COO-) 결합 없음" },
+      shorten: { title: "소수성 사슬 단축 / 할로젠 제거", noReason: "줄일 긴 알킬 사슬·할로젠 없음" },
+      maskPolar: { title: "과도한 극성기(-OH) 메틸화 가리움", noReason: "가릴 알코올·페놀 -OH 작용기 없음" },
+      addIon: { title: "이온화 작용기 도입 / pKa 조절", noReason: "이미 고유 이온 작용기 보유 · 도입 불필요" }
+    };
+
+    const MOD_RULES = {
+      aspirin: {
+        amide: { ok: true, sub: "페놀 에스터(-COO-) → 아마이드(-NH-) 안정화" },
+        shorten: { ok: false, sub: "해당 없음 · 긴 소수성 사슬·할로젠 없음" },
+        maskPolar: { ok: false, sub: "해당 없음 · -OH는 카복실기(-COOH) 일부임" },
+        addIon: { ok: false, sub: "해당 없음 · 이미 카복실기(-COOH) 보유" }
+      },
+      ibuprofen: {
+        amide: { ok: false, sub: "해당 없음 · 에스터(-COO-) 결합 없음" },
+        shorten: { ok: true, sub: "아이소뷰틸 사슬 → 메틸 단축 (log P 감소)" },
+        maskPolar: { ok: false, sub: "해당 없음 · 알코올/페놀 -OH 없음" },
+        addIon: { ok: false, sub: "해당 없음 · 이미 카복실기(-COOH) 보유" }
+      },
+      lidocaine: {
+        amide: { ok: false, sub: "해당 없음 · 이미 안정한 아마이드 결합 보유" },
+        shorten: { ok: true, sub: "고리 메틸·에틸 사슬 축소 (MW·log P 감소)" },
+        maskPolar: { ok: false, sub: "해당 없음 · -OH 작용기 없음" },
+        addIon: { ok: false, sub: "해당 없음 · 이미 3차 아민기 보유" }
+      },
+      acetaminophen: {
+        amide: { ok: false, sub: "해당 없음 · 이미 아세트아마이드 결합 보유" },
+        shorten: { ok: false, sub: "해당 없음 · 단축할 소수성 사슬·할로젠 없음" },
+        maskPolar: { ok: true, sub: "페놀성 -OH 1개 → -OCH₃ (HBD -1 · log P 상승)", ohCount: 1 },
+        addIon: { ok: false, sub: "해당 없음 · 표준 해열진통 중성 골격 유지" }
+      },
+      insulin: {
+        amide: { ok: true, title: "펩타이드 결합 안정화 (N-메틸화)", sub: "절단 취약 펩타이드 결합 보호 (위산·효소 내성)" },
+        shorten: { ok: false, sub: "해당 없음 · 51-아미노산 거대 펩타이드" },
+        maskPolar: { ok: false, sub: "해당 없음 · 거대분자라 STEP 3 전달체(SNAC) 필요" },
+        addIon: { ok: false, sub: "해당 없음 · 이미 양쪽성(N말단·C말단) 전하 보유" }
+      },
+      metformin: {
+        amide: { ok: false, sub: "해당 없음 · 에스터 결합 없음" },
+        shorten: { ok: false, sub: "해당 없음 · 이미 초소형 분자(MW 129)" },
+        maskPolar: { ok: false, sub: "해당 없음 · -OH 작용기 없음" },
+        addIon: { ok: false, sub: "해당 없음 · 이미 강염기 바이구아나이드 보유" }
+      },
+      propranolol: {
+        amide: { ok: false, sub: "해당 없음 · 에스터 결합 없음" },
+        shorten: { ok: false, sub: "해당 없음 · 나프탈렌 핵심 약리 골격" },
+        maskPolar: { ok: true, sub: "알코올 -OH 1개 → -OCH₃ (HBD -1 · TPSA -11)", ohCount: 1 },
+        addIon: { ok: false, sub: "해당 없음 · 이미 2차 아민기 보유" }
+      },
+      candidateA: {
+        amide: { ok: false, sub: "해당 없음 · 에스터(-COO-) 결합 없음" },
+        shorten: { ok: true, sub: "C₈ 긴 사슬 → C₃ 단축 (MW·log P 크게 감소)" },
+        maskPolar: { ok: false, sub: "해당 없음 · 이미 메톡시(-OCH₃)만 있음(-OH 없음)" },
+        addIon: { ok: true, sub: "사슬 말단에 아민(-N(CH₃)₂) 도입 (용해도 급상승)" }
+      },
+      candidateB: {
+        amide: { ok: false, sub: "해당 없음 · 이미 안정한 아마이드 결합 보유" },
+        shorten: { ok: false, sub: "해당 없음 · 단축할 소수성 사슬·할로젠 없음" },
+        maskPolar: { ok: true, sub: "과도한 -OH 3개 메틸화(-OCH₃) → 막 투과 개선", ohCount: 3 },
+        addIon: { ok: true, sub: "아민 염기도(pKa 9.2→6.8) 조절 · 소장 중성 비율↑" }
+      },
+      candidateC: {
+        amide: { ok: true, sub: "내부 에스터(-COO-) → 아마이드(-NH-)로 위산 보호" },
+        shorten: { ok: false, sub: "해당 없음 · 과도한 소수성 사슬·할로젠 없음" },
+        maskPolar: { ok: false, sub: "해당 없음 · 가릴 -OH 없음 (-COOH만 보유)" },
+        addIon: { ok: false, sub: "해당 없음 · 이미 카복실기(-COOH) 보유" }
+      },
+      candidateD: {
+        amide: { ok: false, sub: "해당 없음 · 이미 안정한 아마이드 결합 보유" },
+        shorten: { ok: true, sub: "벤젠 고리 염소(-Cl) 2개 제거 (log P·용해도 개선)" },
+        maskPolar: { ok: false, sub: "해당 없음 · -OH 작용기 없음" },
+        addIon: { ok: false, sub: "해당 없음 · 이미 말단 3차 아민기 보유" }
+      },
+      candidateE: {
+        amide: { ok: false, sub: "해당 없음 · 이미 다이아마이드 결합 보유" },
+        shorten: { ok: true, sub: "아이소프로필기(-iPr) → 메틸 단축 (MW 감소)" },
+        maskPolar: { ok: true, sub: "다중 -OH 3개 메틸화(-OCH₃) → 막 투과 개선", ohCount: 3 },
+        addIon: { ok: true, sub: "말단에 이온화 아민(-N(CH₃)₂) 도입" }
+      },
+      candidateF: {
+        amide: { ok: false, sub: "해당 없음 · 이미 아마이드 결합(에스터 없음)" },
+        shorten: { ok: true, sub: "에톡시(-OCH₂CH₃) → 메톡시(-OCH₃) 단축" },
+        maskPolar: { ok: false, sub: "해당 없음 · -OH 작용기 없음 (-COOH만 보유)" },
+        addIon: { ok: false, sub: "해당 없음 · 이미 카복실기(-COOH) 보유" }
+      }
+    };
+
+    function getModMeta(presetKey, modKey) {
+      const rule = MOD_RULES[presetKey] && MOD_RULES[presetKey][modKey];
+      const base = MOD_BASE_UI[modKey];
+      if (!rule) return { ok: false, title: base.title, sub: base.noReason, ohCount: 3 };
+      return {
+        ok: !!rule.ok,
+        title: rule.title || base.title,
+        sub: rule.sub || (rule.ok ? "" : base.noReason),
+        ohCount: rule.ohCount || 3
+      };
+    }
+
+    function isModSupported(presetKey, modKey) {
+      return getModMeta(presetKey, modKey).ok;
+    }
+
+    const LOGBOOK_STORAGE_KEY = "chem_screen_logbook_v2";
+
+    // ==================== 2. STATE ====================
+    let currentPresetKey = "aspirin";
+    let highlightMode = "all";
+    let trapRoute = "stomach-blood";
+    let doseMode = "single";
+    let uiMode = "beginner";
+    let activeMission = "warmup";
+    let state = {
+      ...PRESETS.aspirin,
+      ph: 1.5,
+      mods: { amide: false, shorten: false, maskPolar: false, addIon: false }
+    };
+    let logbook = [];
+
+    function loadSavedLogbook() {
+      try {
+        const raw = window.localStorage && localStorage.getItem(LOGBOOK_STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) logbook = parsed;
+        }
+      } catch (e) {}
+    }
+
+    function saveLogbook() {
+      try {
+        if (window.localStorage) {
+          localStorage.setItem(LOGBOOK_STORAGE_KEY, JSON.stringify(logbook));
+        }
+      } catch (e) {}
+    }
+
+    // ==================== 3. CHEMICAL MODELS ====================
+    function estimateLogS0(s) {
+      const effMw = Math.min(s.mw, 900);
+      const est = 0.5 - s.logP - 0.006 * (effMw - 180) + 0.015 * (s.tpsa - 50) + 0.12 * s.hbd;
+      return Math.max(-8.0, Math.min(0.0, Math.round(est * 20) / 20));
+    }
+
+    function computeModifiedPreset(presetKey, mods) {
+      const p = PRESETS[presetKey];
+      let mw = p.mw;
+      let logP = p.logP;
+      let hbd = p.hbd;
+      let hba = p.hba;
+      let tpsa = p.tpsa;
+      let stability = p.stability;
+      let type = p.type;
+      let pka = p.pka;
+      let pka2 = p.pka2 !== undefined ? p.pka2 : 8.6;
+      let logS0 = p.logS0;
+      let dgBind = p.dgBind;
+
+      if (mods.amide && isModSupported(presetKey, "amide")) {
+        stability = "stable";
+        if (presetKey !== "insulin") {
+          hbd = Math.min(10, hbd + 1);
+          tpsa = Math.min(220, Math.round((tpsa + 3.0) * 10) / 10);
+          mw = Math.max(100, Math.round((mw - 1.0) * 10) / 10);
+          logP = Math.max(-3.0, Math.round((logP - 0.30) * 100) / 100);
+          logS0 = Math.min(0.0, Math.round((logS0 + 0.15) * 20) / 20);
+        } else {
+          mw = Math.round((mw + 28.0) * 10) / 10;
+          tpsa = Math.max(10, Math.round((tpsa - 12.0) * 10) / 10);
+        }
+        dgBind = Math.round((dgBind - 0.1) * 10) / 10;
+      }
+
+      if (mods.shorten && isModSupported(presetKey, "shorten")) {
+        mw = Math.max(100, Math.round((mw - (mw > 1000 ? 1200.0 : 84.0)) * 10) / 10);
+        logP = Math.max(-3.0, Math.round((logP - 1.80) * 100) / 100);
+        logS0 = Math.min(0.0, Math.round((logS0 + 2.50) * 20) / 20);
+        dgBind = Math.round((dgBind + 0.6) * 10) / 10;
+      }
+
+      if (mods.maskPolar && isModSupported(presetKey, "maskPolar")) {
+        const ohCnt = getModMeta(presetKey, "maskPolar").ohCount || 3;
+        const scale = ohCnt / 3;
+        hbd = Math.max(0, hbd - ohCnt);
+        hba = ohCnt >= 3 ? Math.max(0, hba - 2) : hba;
+        tpsa = Math.max(10, Math.round((tpsa - (ohCnt === 1 ? 11.0 : 55.0)) * 10) / 10);
+        logP = Math.min(7.5, Math.round((logP + (ohCnt === 1 ? 0.68 : 1.40)) * 100) / 100);
+        logS0 = Math.max(-8.0, Math.round((logS0 - 0.45 * scale) * 20) / 20);
+        mw = Math.max(100, Math.round((mw + 14.0) * 10) / 10);
+        dgBind = Math.round((dgBind + 0.5 * scale) * 10) / 10;
+      }
+
+      if (mods.addIon && isModSupported(presetKey, "addIon")) {
+        if (p.type === "neutral") {
+          type = "base";
+          pka = 8.5;
+          mw = Math.round((mw + 15.0) * 10) / 10;
+          hba = Math.min(15, hba + 1);
+          tpsa = Math.min(220, Math.round((tpsa + 3.2) * 10) / 10);
+          logP = Math.max(-3.0, Math.round((logP - 0.25) * 100) / 100);
+          logS0 = Math.min(0.0, Math.round((logS0 + 0.35) * 20) / 20);
+          dgBind = Math.round((dgBind - 0.2) * 10) / 10;
+        } else if (p.type === "base") {
+          pka = Math.min(pka, 6.8);
+          logP = Math.min(7.5, Math.round((logP + 0.65) * 100) / 100);
+          dgBind = Math.round((dgBind + 0.2) * 10) / 10;
+        } else if (p.type === "acid") {
+          pka = Math.max(3.6, Math.round((pka - 0.4) * 10) / 10);
+          logS0 = Math.min(0.0, Math.round((logS0 + 0.40) * 20) / 20);
+          dgBind = Math.round((dgBind - 0.1) * 10) / 10;
+        } else if (p.type === "zwitter") {
+          pka2 = 7.4;
+          logP = Math.min(7.5, Math.round((logP + 0.50) * 100) / 100);
+        }
+      }
+
+      return { mw, logP, hbd, hba, tpsa, stability, type, pka, pka2, logS0, dgBind };
+    }
+
+    function applyModifications(preserveStep3 = true) {
+      const m = computeModifiedPreset(currentPresetKey, state.mods);
+      const keep = preserveStep3
+        ? { ph: state.ph, thick: state.thick, diff: state.diff, halfLife: state.halfLife, dose: state.dose, enteric: state.enteric, enhancer: state.enhancer }
+        : {};
+      state = { ...PRESETS[currentPresetKey], ...m, mods: { ...state.mods }, ...keep };
+      renderAll();
+    }
+
+    function calcLipinski(s) {
+      const checks = [
+        { label: "분자량 (MW)", rule: "≤ 500 g/mol", val: s.mw.toFixed(1), ok: s.mw <= 500 },
+        { label: "친유성 (log P)", rule: "≤ 5.0", val: s.logP.toFixed(2), ok: s.logP <= 5.0 },
+        { label: "수소결합 주개 (HBD)", rule: "≤ 5 개", val: String(s.hbd), ok: s.hbd <= 5 },
+        { label: "수소결합 받개 (HBA)", rule: "≤ 10 개", val: String(s.hba), ok: s.hba <= 10 },
+        { label: "극성 표면적 (TPSA)", rule: "≤ 140 Å²", val: s.tpsa.toFixed(1), ok: s.tpsa <= 140 }
+      ];
+      const lipinskiViolations = checks.slice(0, 4).filter(c => !c.ok).length;
+      const tpsaFail = !checks[4].ok;
+      const tooHydrophilic = s.logP < -0.5;
+      return { checks, lipinskiViolations, tpsaFail, tooHydrophilic };
+    }
+
+    function calcPhBehavior(ph, s) {
+      let fIon = 0;
+      let fCat = 0;
+      let fAn = 0;
+      let logSph = s.logS0;
+
+      if (s.type === "acid") {
+        const ratio = Math.pow(10, ph - s.pka);
+        fIon = ratio / (1 + ratio);
+        fAn = fIon;
+        logSph = s.logS0 + Math.log10(1 + ratio);
+      } else if (s.type === "base") {
+        const ratio = Math.pow(10, s.pka - ph);
+        fIon = ratio / (1 + ratio);
+        fCat = fIon;
+        logSph = s.logS0 + Math.log10(1 + ratio);
+      } else if (s.type === "zwitter") {
+        const rawP2 = s.pka2 !== undefined ? s.pka2 : 8.6;
+        const p1 = Math.min(s.pka, rawP2);
+        const p2 = Math.max(s.pka, rawP2);
+        const rCat = Math.pow(10, p1 - ph);
+        const rAn = Math.pow(10, ph - p2);
+        const z = 1 + rCat + rAn;
+        fCat = rCat / z;
+        fAn = rAn / z;
+        fIon = (rCat + rAn) / z;
+        logSph = s.logS0 + Math.log10(z);
+      } else {
+        fIon = 0;
+        logSph = s.logS0;
+      }
+
+      const fNeu = Math.max(0, 1 - fIon);
+      // 유효 분배계수 log D (중성 분자 + 극미량 이온쌍 분배 반영)
+      const pVal = Math.pow(10, s.logP);
+      const dVal = pVal * fNeu + pVal * 0.000316 * fIon;
+      const logDph = Math.log10(Math.max(dVal, 1e-8));
+      const solMgL = Math.pow(10, Math.min(logSph, 1.5)) * s.mw * 1000;
+
+      return { fIon, fNeu, fCat, fAn, logSph, logDph, solMgL };
+    }
+
+    function calcBCS(s) {
+      const si = calcPhBehavior(6.5, s);
+      const highSol = si.logSph >= -2.0;
+      const highPerm = si.logDph >= -1.8 && s.logP >= 0.2 && s.tpsa <= 130 && s.mw <= 700;
+
+      let bcsClass = "Class IV";
+      let bcsDesc = "저용해도 · 저투과성";
+      let badgeClass = "fail";
+
+      if (highSol && highPerm) {
+        bcsClass = "Class I";
+        bcsDesc = "고용해도 · 고투과성 (최적)";
+        badgeClass = "pass";
+      } else if (!highSol && highPerm) {
+        bcsClass = "Class II";
+        bcsDesc = "저용해도 · 고투과성 (용해 개선 필요)";
+        badgeClass = "warn";
+      } else if (highSol && !highPerm) {
+        bcsClass = "Class III";
+        bcsDesc = "고용해도 · 저투과성 (막 투과 한계)";
+        badgeClass = "warn";
+      }
+
+      return { highSol, highPerm, bcsClass, bcsDesc, badgeClass, logS65: si.logSph, logD65: si.logDph };
+    }
+
+    function calcAbsEffAtPh(ph, s, useEnhancer = false) {
+      const phRes = calcPhBehavior(ph, s);
+      let solEff = 1.0;
+      if (phRes.logSph < -2.0 && phRes.logSph >= -3.5) {
+        solEff = 0.95 - (Math.abs(phRes.logSph + 2.0) / 1.5) * 0.25;
+      } else if (phRes.logSph < -3.5) {
+        solEff = Math.max(0.03, 0.70 * Math.pow(10, (phRes.logSph + 3.5) * 0.5));
+      }
+
+      const bcsHighPerm = phRes.logDph >= -1.8 && s.logP >= 0.2 && s.tpsa <= 130 && s.mw <= 700;
+      const mwPenalty = s.mw > 500 ? Math.max(0.06, Math.exp(-(s.mw - 500) / 500)) : 1.0;
+      const tpsaPenalty = s.tpsa > 140 ? Math.max(0.32, 140 / s.tpsa) : 1.0;
+      let permRaw = bcsHighPerm
+        ? 0.92
+        : Math.max(0.12, 0.92 * Math.pow(10, Math.min(0, (Math.min(phRes.logDph, s.logP - 1.2) + 1.5) * 0.35)));
+      let permEff = Math.max(0.04, Math.min(0.95, permRaw * mwPenalty * tpsaPenalty));
+
+      if (useEnhancer) {
+        // SNAC / 나노전달체 적용: 상피세포 막 투과 및 거대분자 흡수 장벽 획기적 완화
+        const boosted = permEff + (0.80 - permEff) * 0.76;
+        permEff = Math.max(permEff, Math.min(0.86, s.mw > 1000 ? Math.max(0.62, boosted) : boosted));
+        if (solEff < 0.5 && s.logP > 3.5) {
+          solEff = Math.min(0.85, solEff + 0.32); // LNP 가용화 보조 효과
+        }
+      }
+
+      return { solEff, permEff, absEff: solEff * permEff };
+    }
+
+    function calcMolecularBioavailability(s, withFormulation = false) {
+      const abs65 = calcAbsEffAtPh(6.5, s, withFormulation && s.enhancer);
+      const acidLossMap = { stable: 0.0, caution: 0.20, danger: 0.65 };
+      const rawLoss = acidLossMap[s.stability] || 0;
+      let acidSurv = 1 - rawLoss;
+      if (withFormulation) {
+        if (s.enteric) acidSurv = 1.0;
+        else if (s.enhancer) acidSurv = Math.max(acidSurv, 1 - rawLoss * 0.35);
+      }
+      return Math.round(Math.max(2, Math.min(96, abs65.absEff * acidSurv * 100)));
+    }
+
+    function calcIonTrapping(routeKey, s) {
+      const rt = TRAP_ROUTES[routeKey] || TRAP_ROUTES["stomach-blood"];
+      const b1 = calcPhBehavior(rt.ph1, s);
+      const b2 = calcPhBehavior(rt.ph2, s);
+      const f1 = Math.max(1e-6, b1.fNeu);
+      const f2 = Math.max(1e-6, b2.fNeu);
+      const ratio2to1 = f1 / f2;
+      const ratio1to2 = f2 / f1;
+      const permLimited = s.mw > 900 || s.tpsa > 140 || s.logP < -0.5;
+      return { rt, b1, b2, ratio2to1, ratio1to2, permLimited };
+    }
+
+    function simulatePK(s, customThick = null, customDoseMode = null) {
+      const L = customThick !== null ? customThick : s.thick;
+      const dMode = customDoseMode !== null ? customDoseMode : doseMode;
+      const D_eff = s.diff;
+      const tHalf = s.halfLife;
+      const dose = s.dose;
+      const ke = Math.LN2 / tHalf;
+      const Vd = 10.0;
+      const MEC = 1.8;
+      const MTC = 7.5;
+
+      const acidLossMap = { stable: 0.0, caution: 0.20, danger: 0.65 };
+      const rawLoss = acidLossMap[s.stability] || 0;
+      const enhancerProt = s.enhancer ? 0.35 : 1.0;
+
+      // 1) 일반 속방정 (IR): 단회 또는 8시간 간격 3회 반복 복용
+      const irRemain = 1 - rawLoss * enhancerProt;
+      const ka_IR = 2.6;
+      const abs65 = calcAbsEffAtPh(6.5, s, s.enhancer);
+      const abs15 = calcAbsEffAtPh(1.5, s, s.enhancer);
+      const abs70 = calcAbsEffAtPh(7.0, s, s.enhancer);
+
+      // 2) 고분자 캡슐 (CR): 소화관 연속 이동 모델 (위 0~1.5h -> 소장 1.5~6.0h -> 대장 6.0~24h)
+      const k_rel = 0.28 * (D_eff / (L / 50));
+      const lagTime = s.enteric ? 1.5 : 0.0;
+      const capLoss = s.enteric ? 0.0 : rawLoss * 0.45 * enhancerProt;
+      const kAcidStomach = s.enteric ? 0.0 : (-Math.log(Math.max(0.15, 1 - rawLoss * 0.45 * enhancerProt)) / 1.5);
+
+      const dt = 0.05;
+      const totalT = 24.0;
+      const steps = Math.round(totalT / dt);
+
+      const irPts = [];
+      const capPts = [];
+
+      const doseTimesIR = dMode === "multi3" ? [0.0, 8.0, 16.0] : [0.0];
+      const perDoseIR = dMode === "multi3" ? dose * 0.55 : dose;
+      let nextDoseIdx = 0;
+
+      let gIR = 0;
+      let bIR = 0;
+
+      let coreCap = dose;
+      let lumenCap = 0;
+      let bCap = 0;
+
+      let irCmax = 0, capCmax = 0;
+      let irValidSteps = 0, capValidSteps = 0;
+      let capToxicSteps = 0;
+
+      for (let i = 0; i <= steps; i++) {
+        const t = +(i * dt).toFixed(3);
+
+        if (nextDoseIdx < doseTimesIR.length && t >= doseTimesIR[nextDoseIdx] - 1e-6) {
+          gIR += perDoseIR * irRemain * abs65.absEff;
+          nextDoseIdx++;
+        }
+
+        const cIR = bIR / Vd;
+        const cCap = bCap / Vd;
+
+        irPts.push([t, cIR]);
+        capPts.push([t, cCap]);
+
+        if (cIR > irCmax) irCmax = cIR;
+        if (cCap > capCmax) capCmax = cCap;
+        if (cIR >= MEC && cIR <= MTC) irValidSteps++;
+        if (cCap >= MEC && cCap <= MTC) capValidSteps++;
+        if (cCap > MTC) capToxicSteps++;
+
+        // IR Euler step
+        const dAbsIR = ka_IR * gIR;
+        gIR -= dAbsIR * dt;
+        bIR += (dAbsIR - ke * bIR) * dt;
+
+        // Capsule GI-Transit Euler step
+        let giEffNow = abs65.absEff;
+        let areaScale = 1.0;
+        let acidRate = 0.0;
+
+        if (t < 1.5) {
+          giEffNow = abs15.absEff;
+          areaScale = 0.30;
+          acidRate = kAcidStomach;
+        } else if (t < 6.0) {
+          giEffNow = abs65.absEff;
+          areaScale = 1.0;
+        } else {
+          giEffNow = abs70.absEff;
+          areaScale = 0.70;
+        }
+
+        const released = t >= lagTime ? k_rel * coreCap : 0;
+        const coreAcid = acidRate * coreCap;
+        const kaCap = 3.0 * giEffNow * areaScale;
+        const absorbedCap = kaCap * lumenCap;
+        const lumenAcid = acidRate * lumenCap;
+
+        coreCap = Math.max(0, coreCap - (released + coreAcid) * dt);
+        lumenCap = Math.max(0, lumenCap + (released - absorbedCap - lumenAcid) * dt);
+        bCap += (absorbedCap - ke * bCap) * dt;
+      }
+
+      return {
+        irPts, capPts,
+        irCmax, capCmax,
+        irValidH: irValidSteps * dt,
+        capValidH: capValidSteps * dt,
+        capToxicH: capToxicSteps * dt,
+        irLossPct: rawLoss * enhancerProt * 100,
+        capLossPct: capLoss * 100,
+        k_rel, MEC, MTC,
+        absEff: abs65.absEff,
+        dMode
+      };
+    }
+
+    function findOptimalThickness(s) {
+      let bestL = s.thick;
+      let bestScore = -999;
+      for (let L = 15; L <= 200; L += 5) {
+        const res = simulatePK(s, L, doseMode);
+        const score = res.capValidH - res.capToxicH * 2.5;
+        if (score > bestScore) {
+          bestScore = score;
+          bestL = L;
+        }
+      }
+      return bestL;
+    }
+
+    function formatSol(mgL) {
+      if (mgL >= 100000) return "> 100,000 mg/L";
+      if (mgL >= 100) return Math.round(mgL).toLocaleString() + " mg/L";
+      if (mgL >= 1) return mgL.toFixed(1) + " mg/L";
+      if (mgL >= 0.01) return mgL.toFixed(3) + " mg/L";
+      return mgL.toExponential(1) + " mg/L";
+    }
+
+    // ==================== 4. MOLECULE 2D STRUCTURE RENDERER ====================
+    function polarStep(pt, deg, len) {
+      const rad = (deg * Math.PI) / 180;
+      return [pt[0] + len * Math.cos(rad), pt[1] + len * Math.sin(rad)];
+    }
+
+    function hexVertices(cx, cy, r, startDeg = 30) {
+      const pts = [];
+      for (let i = 0; i < 6; i++) {
+        pts.push(polarStep([cx, cy], startDeg + i * 60, r));
+      }
+      return pts;
+    }
+
+    function svgHexRing(cx, cy, r, startDeg = 30, aromatic = true) {
+      const pts = hexVertices(cx, cy, r, startDeg);
+      const poly = `<polygon points="${pts.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ')}" fill="none" stroke="#1E293B" stroke-width="2.1" stroke-linejoin="round" />`;
+      if (!aromatic) return poly;
+      const dblEdges = Array.isArray(aromatic) ? aromatic : [1, 3, 5];
+      let innerLines = "";
+      for (const idx of dblEdges) {
+        const p1 = pts[idx];
+        const p2 = pts[(idx + 1) % 6];
+        const ex = p2[0] - p1[0], ey = p2[1] - p1[1];
+        const elen = Math.hypot(ex, ey) || 1;
+        const ux = ex / elen, uy = ey / elen;
+        const mx = (p1[0] + p2[0]) / 2, my = (p1[1] + p2[1]) / 2;
+        const nx0 = cx - mx, ny0 = cy - my;
+        const nlen = Math.hypot(nx0, ny0) || 1;
+        const nx = (nx0 / nlen) * 4.2, ny = (ny0 / nlen) * 4.2;
+        const trim = 4.6;
+        const x1 = p1[0] + ux * trim + nx, y1 = p1[1] + uy * trim + ny;
+        const x2 = p2[0] - ux * trim + nx, y2 = p2[1] - uy * trim + ny;
+        innerLines += `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="#1E293B" stroke-width="1.8" stroke-linecap="round" />`;
+      }
+      const circle = `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(r * 0.48).toFixed(1)}" fill="none" stroke="#64748B" stroke-width="1.1" stroke-opacity="0.28" stroke-dasharray="3,2.5" />`;
+      return poly + innerLines + circle;
+    }
+
+    function svgBond(x1, y1, x2, y2, dashed = false, color = null) {
+      const col = color || (dashed ? '#DC2626' : '#1E293B');
+      return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${col}" stroke-width="2.1" stroke-linecap="round" ${dashed ? 'stroke-dasharray="4,3"' : ''} />`;
+    }
+
+    function svgDoubleBond(x1, y1, x2, y2) {
+      const dx = x2 - x1, dy = y2 - y1;
+      const len = Math.hypot(dx, dy) || 1;
+      const nx = (-dy / len) * 2.5;
+      const ny = (dx / len) * 2.5;
+      return `
+        <line x1="${(x1 + nx).toFixed(1)}" y1="${(y1 + ny).toFixed(1)}" x2="${(x2 + nx).toFixed(1)}" y2="${(y2 + ny).toFixed(1)}" stroke="#1E293B" stroke-width="1.9" stroke-linecap="round" />
+        <line x1="${(x1 - nx).toFixed(1)}" y1="${(y1 - ny).toFixed(1)}" x2="${(x2 - nx).toFixed(1)}" y2="${(y2 - ny).toFixed(1)}" stroke="#1E293B" stroke-width="1.9" stroke-linecap="round" />
+      `;
+    }
+
+    function svgAtomLabel(x, y, text, color = "#0F172A", bgW = null) {
+      const w = bgW || Math.max(18, text.length * 8.5 + 8);
+      return `
+        <rect x="${(x - w / 2).toFixed(1)}" y="${(y - 9).toFixed(1)}" width="${w.toFixed(1)}" height="18" rx="4" fill="#FFFFFF" />
+        <text x="${x.toFixed(1)}" y="${(y + 4.5).toFixed(1)}" text-anchor="middle" font-size="12.2" font-weight="700" fill="${color}">${text}</text>
+      `;
+    }
+
+    function measureBadgeWidth(text) {
+      let w = 16;
+      for (const ch of text) {
+        w += /[\u3131-\uD79D]/.test(ch) ? 10.2 : 6.4;
+      }
+      return Math.ceil(w);
+    }
+
+    function makeZone(cat, x, y, rx, ry, label, badgeX, badgeY) {
+      const active = highlightMode === "all" || highlightMode === cat || (highlightMode === "ion" && (cat === "ion" || cat === "danger"));
+      const op = active ? 1 : 0.10;
+      const palette = {
+        hydro: { fill: "#DBEAFE", stroke: "#2563EB", text: "#1D4ED8", badgeBg: "#EFF6FF" },
+        lipo: { fill: "#D1FAE5", stroke: "#059669", text: "#047857", badgeBg: "#ECFDF5" },
+        ion: { fill: "#FEF3C7", stroke: "#D97706", text: "#B45309", badgeBg: "#FFFBEB" },
+        danger: { fill: "#FEE2E2", stroke: "#DC2626", text: "#B91C1C", badgeBg: "#FEF2F2" }
+      };
+      const c = palette[cat];
+      const shape = `
+        <g opacity="${op}">
+          <ellipse cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="${rx}" ry="${ry}" fill="${c.fill}" fill-opacity="0.56" stroke="${c.stroke}" stroke-width="1.4" stroke-dasharray="4,3" />
+        </g>
+      `;
+
+      let lbl = "";
+      if (label && active) {
+        const bw = measureBadgeWidth(label);
+        const clampedBx = Math.max(bw / 2 + 6, Math.min(540 - bw / 2 - 6, badgeX));
+        const isTop = badgeY < y;
+        const lineStartY = isTop ? badgeY + 10 : badgeY - 10;
+        const targetY = isTop ? y - ry + 3 : y + ry - 3;
+        lbl = `
+          <g>
+            <line x1="${clampedBx.toFixed(1)}" y1="${lineStartY.toFixed(1)}" x2="${x.toFixed(1)}" y2="${targetY.toFixed(1)}" stroke="${c.stroke}" stroke-width="1.2" stroke-dasharray="2.5,2.5" />
+            <circle cx="${x.toFixed(1)}" cy="${targetY.toFixed(1)}" r="2.5" fill="${c.stroke}" />
+            <rect x="${(clampedBx - bw / 2).toFixed(1)}" y="${(badgeY - 10).toFixed(1)}" width="${bw}" height="20" rx="5" fill="${c.badgeBg}" fill-opacity="0.97" stroke="${c.stroke}" stroke-width="1.1" />
+            <text x="${clampedBx.toFixed(1)}" y="${(badgeY + 3.5).toFixed(1)}" text-anchor="middle" font-size="10.0" font-weight="700" fill="${c.text}">${label}</text>
+          </g>
+        `;
+      }
+      return { shape, label: lbl };
+    }
+
+    function drawMoleculeStructure() {
+      const svg = document.getElementById("svg-molecule");
+      const phRes = calcPhBehavior(state.ph, state);
+      const isIon = phRes.fIon >= 0.5;
+      const mods = state.mods || {};
+      let zoneShapes = "";
+      let zoneLabels = "";
+      let bonds = "";
+      let atoms = "";
+
+      const addZ = (cat, x, y, rx, ry, label, bx, by) => {
+        const z = makeZone(cat, x, y, rx, ry, label, bx, by);
+        zoneShapes += z.shape;
+        zoneLabels += z.label;
+      };
+
+      if (currentPresetKey === "aspirin") {
+        const L = 30;
+        const v = hexVertices(215, 144, L, 30);
+        const cCarb = polarStep(v[4], 270, L);
+        const oKet = polarStep(cCarb, 210, L);
+        const oOh = polarStep(cCarb, 330, L);
+        const oEst = polarStep(v[5], 330, L);
+        const cAc = polarStep(oEst, 30, L);
+        const oAc = polarStep(cAc, 90, L);
+        const cMe = polarStep(cAc, 330, L);
+
+        addZ("lipo", 215, 144, 42, 40, "무극성 벤젠 고리 (분산력)", 135, 226);
+        addZ("ion", 215, 74, 44, 22, isIon ? `이온화 -COO⁻ (pKa ${state.pka.toFixed(1)})` : `약산성 -COOH (pKa ${state.pka.toFixed(1)})`, 135, 20);
+        if (mods.amide) {
+          addZ("hydro", 267, 114, 24, 20, "아마이드 치환 (위산 안정)", 395, 20);
+          addZ("hydro", 296, 134, 38, 34, "아마이드 결합 (-CONH- · HBD +1)", 392, 226);
+        } else {
+          addZ("danger", 267, 114, 20, 18, "에스터 결합 (가수분해 주의)", 395, 20);
+          addZ("hydro", 296, 134, 38, 34, "극성 에스터기 (수소결합 받개)", 392, 226);
+        }
+
+        bonds += svgHexRing(215, 144, L, 30, true);
+        bonds += svgBond(v[4][0], v[4][1], cCarb[0], cCarb[1]);
+        bonds += svgDoubleBond(cCarb[0], cCarb[1], oKet[0], oKet[1]);
+        bonds += svgBond(cCarb[0], cCarb[1], oOh[0], oOh[1]);
+
+        bonds += svgBond(v[5][0], v[5][1], oEst[0], oEst[1], !mods.amide, mods.amide ? "#2563EB" : null);
+        bonds += svgBond(oEst[0], oEst[1], cAc[0], cAc[1]);
+        bonds += svgDoubleBond(cAc[0], cAc[1], oAc[0], oAc[1]);
+        bonds += svgBond(cAc[0], cAc[1], cMe[0], cMe[1]);
+
+        atoms += svgAtomLabel(oKet[0], oKet[1], "O");
+        atoms += svgAtomLabel(oOh[0], oOh[1], isIon ? "O⁻" : "OH", isIon ? "#D97706" : "#2563EB", 28);
+        atoms += svgAtomLabel(oEst[0], oEst[1], mods.amide ? "NH" : "O", mods.amide ? "#2563EB" : "#DC2626", mods.amide ? 28 : 20);
+        atoms += svgAtomLabel(oAc[0], oAc[1], "O", "#2563EB");
+        atoms += svgAtomLabel(cMe[0], cMe[1], "CH₃", "#334155", 30);
+      } else if (currentPresetKey === "ibuprofen") {
+        const L = 30;
+        const v = hexVertices(260, 130, L, 30);
+        const cBn = polarStep(v[2], 150, L);
+        const cIso = polarStep(cBn, 210, L);
+        const cMe1 = polarStep(cIso, 150, L);
+        const cMe2 = polarStep(cIso, 270, L);
+        const cAlpha = polarStep(v[5], 330, L);
+        const cMe3 = polarStep(cAlpha, 270, L);
+        const cCarb = polarStep(cAlpha, 30, L);
+        const oKet = polarStep(cCarb, 90, L);
+        const oOh = polarStep(cCarb, 330, L);
+
+        if (mods.shorten) {
+          addZ("lipo", 242, 130, 56, 38, "단축된 메틸-벤젠 고리 (log P 감소)", 180, 226);
+        } else {
+          addZ("lipo", 218, 136, 86, 44, "아이소뷰틸 사슬 + 벤젠 고리 (분산력)", 190, 226);
+        }
+        addZ("ion", 348, 118, 42, 34, isIon ? `이온화 -COO⁻ (pKa ${state.pka.toFixed(1)})` : `약산성 -COOH (pKa ${state.pka.toFixed(1)})`, 395, 20);
+
+        bonds += svgHexRing(260, 130, L, 30, true);
+        bonds += svgBond(v[2][0], v[2][1], cBn[0], cBn[1]);
+        if (!mods.shorten) {
+          bonds += svgBond(cBn[0], cBn[1], cIso[0], cIso[1]);
+          bonds += svgBond(cIso[0], cIso[1], cMe1[0], cMe1[1]);
+          bonds += svgBond(cIso[0], cIso[1], cMe2[0], cMe2[1]);
+          atoms += svgAtomLabel(cMe1[0], cMe1[1], "H₃C", "#047857", 30);
+          atoms += svgAtomLabel(cMe2[0], cMe2[1], "CH₃", "#047857", 30);
+        } else {
+          atoms += svgAtomLabel(cBn[0], cBn[1], "H₃C", "#047857", 30);
+        }
+
+        bonds += svgBond(v[5][0], v[5][1], cAlpha[0], cAlpha[1]);
+        bonds += svgBond(cAlpha[0], cAlpha[1], cMe3[0], cMe3[1]);
+        bonds += svgBond(cAlpha[0], cAlpha[1], cCarb[0], cCarb[1]);
+        bonds += svgDoubleBond(cCarb[0], cCarb[1], oKet[0], oKet[1]);
+        bonds += svgBond(cCarb[0], cCarb[1], oOh[0], oOh[1]);
+
+        atoms += svgAtomLabel(cMe3[0], cMe3[1], "CH₃", "#334155", 30);
+        atoms += svgAtomLabel(oKet[0], oKet[1], "O", "#2563EB");
+        atoms += svgAtomLabel(oOh[0], oOh[1], isIon ? "O⁻" : "OH", isIon ? "#D97706" : "#2563EB", 28);
+      } else if (currentPresetKey === "lidocaine") {
+        const L = 28;
+        const v = hexVertices(162, 118, L, 30);
+        const cMe1 = polarStep(v[5], 330, L);
+        const cMe2 = polarStep(v[1], 90, L);
+        const nAm = polarStep(v[0], 30, 36);
+        const cAm = polarStep(nAm, 330, L);
+        const oAm = polarStep(cAm, 270, L);
+        const cCh2 = polarStep(cAm, 30, L);
+        const nTert = polarStep(cCh2, 330, L);
+        const cEt1a = polarStep(nTert, 270, L);
+        const cEt1b = polarStep(cEt1a, 330, L);
+        const cEt2a = polarStep(nTert, 30, L);
+        const cEt2b = polarStep(cEt2a, 90, L);
+
+        addZ("lipo", 168, 126, 48, 54, "2,6-다이메틸벤젠 고리 (무극성)", 125, 20);
+        addZ("hydro", 232, 130, 34, 32, "아마이드 결합 (수소결합·안정)", 260, 226);
+        addZ("ion", 302, 136, 44, 48, isIon ? `양이온 -N⁺H(Et)₂ (pKa ${state.pka.toFixed(1)})` : `3차 아민 -N(Et)₂ (pKa ${state.pka.toFixed(1)})`, 395, 20);
+
+        bonds += svgHexRing(162, 118, L, 30, true);
+        if (!mods.shorten) {
+          bonds += svgBond(v[5][0], v[5][1], cMe1[0], cMe1[1]);
+          bonds += svgBond(v[1][0], v[1][1], cMe2[0], cMe2[1]);
+          atoms += svgAtomLabel(cMe1[0], cMe1[1], "CH₃", "#047857", 30);
+          atoms += svgAtomLabel(cMe2[0], cMe2[1], "CH₃", "#047857", 30);
+        }
+
+        bonds += svgBond(v[0][0], v[0][1], nAm[0], nAm[1]);
+        bonds += svgBond(nAm[0], nAm[1], cAm[0], cAm[1]);
+        bonds += svgDoubleBond(cAm[0], cAm[1], oAm[0], oAm[1]);
+        bonds += svgBond(cAm[0], cAm[1], cCh2[0], cCh2[1]);
+        bonds += svgBond(cCh2[0], cCh2[1], nTert[0], nTert[1]);
+
+        bonds += svgBond(nTert[0], nTert[1], cEt1a[0], cEt1a[1]);
+        bonds += svgBond(nTert[0], nTert[1], cEt2a[0], cEt2a[1]);
+        if (!mods.shorten) {
+          bonds += svgBond(cEt1a[0], cEt1a[1], cEt1b[0], cEt1b[1]);
+          bonds += svgBond(cEt2a[0], cEt2a[1], cEt2b[0], cEt2b[1]);
+          atoms += svgAtomLabel(cEt1b[0], cEt1b[1], "CH₃", "#334155", 30);
+          atoms += svgAtomLabel(cEt2b[0], cEt2b[1], "CH₃", "#334155", 30);
+        } else {
+          atoms += svgAtomLabel(cEt1a[0], cEt1a[1], "CH₃", "#334155", 30);
+          atoms += svgAtomLabel(cEt2a[0], cEt2a[1], "CH₃", "#334155", 30);
+        }
+
+        atoms += svgAtomLabel(nAm[0], nAm[1], "NH", "#2563EB", 26);
+        atoms += svgAtomLabel(oAm[0], oAm[1], "O", "#2563EB");
+        atoms += svgAtomLabel(nTert[0], nTert[1], isIon ? "N⁺H" : "N", isIon ? "#D97706" : "#0F172A", isIon ? 34 : 20);
+      } else if (currentPresetKey === "acetaminophen") {
+        const L = 32;
+        const v = hexVertices(245, 128, L, 30);
+        const oPh = polarStep(v[3], 210, L);
+        const nAm = polarStep(v[0], 30, L);
+        const cAc = polarStep(nAm, 330, L);
+        const oAc = polarStep(cAc, 270, L);
+        const cMe = polarStep(cAc, 30, L);
+
+        addZ("hydro", 188, 96, 28, 20, mods.maskPolar ? "메틸화 페놀 (-OCH₃)" : `페놀 -OH (pKa ${state.pka.toFixed(1)})`, 130, 20);
+        addZ("lipo", 245, 128, 40, 40, "방향족 고리 (분산력)", 250, 226);
+        addZ("hydro", 328, 140, 44, 34, "아세트아마이드기 (수소결합)", 395, 20);
+
+        bonds += svgHexRing(245, 128, L, 30, true);
+        bonds += svgBond(v[3][0], v[3][1], oPh[0], oPh[1]);
+        bonds += svgBond(v[0][0], v[0][1], nAm[0], nAm[1]);
+        bonds += svgBond(nAm[0], nAm[1], cAc[0], cAc[1]);
+        bonds += svgDoubleBond(cAc[0], cAc[1], oAc[0], oAc[1]);
+        bonds += svgBond(cAc[0], cAc[1], cMe[0], cMe[1]);
+
+        const phTxt = mods.maskPolar ? "H₃CO" : (isIon ? "⁻O" : "HO");
+        atoms += svgAtomLabel(oPh[0], oPh[1], phTxt, mods.maskPolar ? "#059669" : (isIon ? "#D97706" : "#2563EB"), mods.maskPolar ? 38 : 28);
+        atoms += svgAtomLabel(nAm[0], nAm[1], "NH", "#2563EB", 28);
+        atoms += svgAtomLabel(oAc[0], oAc[1], "O", "#2563EB");
+        atoms += svgAtomLabel(cMe[0], cMe[1], "CH₃", "#334155", 30);
+      } else if (currentPresetKey === "candidateA") {
+        const L = 24;
+        const c1 = [128, 146];
+        const c2 = [c1[0] + L * Math.sqrt(3), c1[1]];
+        const vL = hexVertices(c1[0], c1[1], L, 30);
+        const vM = hexVertices(c2[0], c2[1], L, 30);
+        const oMe1 = polarStep(vL[3], 210, L);
+        const oMe2 = polarStep(vL[2], 150, L);
+        const c3 = polarStep(vM[5], 330, 2 * L);
+        const vR = hexVertices(c3[0], c3[1], L, 30);
+
+        const chainSteps = mods.shorten ? 3 : 8;
+        const chain = [vR[5]];
+        for (let i = 0; i < chainSteps; i++) {
+          chain.push(polarStep(chain[chain.length - 1], i % 2 === 0 ? 330 : 30, L));
+        }
+
+        addZ("hydro", 86, 146, 28, 36, "메톡시기 (-OCH₃) 2개", 120, 20);
+        if (mods.shorten) {
+          addZ("lipo", 224, 126, 118, 48, "사슬 단축된 방향족 골격 (C₈ → C₃)", 225, 226);
+        } else {
+          addZ("lipo", 274, 122, 174, 52, "다환 방향족 고리 · 장쇄 탄화수소 골격", 275, 226);
+        }
+
+        bonds += svgHexRing(c1[0], c1[1], L, 30, true);
+        bonds += svgHexRing(c2[0], c2[1], L, 30, [0, 4]);
+        bonds += svgBond(vL[3][0], vL[3][1], oMe1[0], oMe1[1]);
+        bonds += svgBond(vL[2][0], vL[2][1], oMe2[0], oMe2[1]);
+        bonds += svgBond(vM[5][0], vM[5][1], vR[2][0], vR[2][1]);
+        bonds += svgHexRing(c3[0], c3[1], L, 30, true);
+        for (let i = 0; i < chain.length - 1; i++) {
+          bonds += svgBond(chain[i][0], chain[i][1], chain[i + 1][0], chain[i + 1][1]);
+        }
+
+        const endPt = chain[chain.length - 1];
+        if (mods.addIon) {
+          // 이전 결합 방향에 맞춰 120° 삼방정계 분지
+          const degA = mods.shorten ? 270 : 330;
+          const degB = mods.shorten ? 30 : 90;
+          const m1 = polarStep(endPt, degA, L);
+          const m2 = polarStep(endPt, degB, L);
+          bonds += svgBond(endPt[0], endPt[1], m1[0], m1[1]);
+          bonds += svgBond(endPt[0], endPt[1], m2[0], m2[1]);
+          addZ("ion", endPt[0] + 6, endPt[1], 32, 30, isIon ? `도입 아민 양이온 -N⁺H(CH₃)₂ (pKa ${state.pka.toFixed(1)})` : `도입 아민 -N(CH₃)₂ (pKa ${state.pka.toFixed(1)})`, 390, 20);
+          atoms += svgAtomLabel(endPt[0], endPt[1], isIon ? "N⁺H" : "N", isIon ? "#D97706" : "#2563EB", isIon ? 34 : 20);
+          atoms += svgAtomLabel(m1[0], m1[1], "CH₃", "#334155", 30);
+          atoms += svgAtomLabel(m2[0], m2[1], "CH₃", "#334155", 30);
+        } else {
+          atoms += svgAtomLabel(endPt[0], endPt[1], "CH₃", "#047857", 30);
+        }
+
+        atoms += svgAtomLabel(oMe1[0], oMe1[1], "H₃CO", "#2563EB", 38);
+        atoms += svgAtomLabel(oMe2[0], oMe2[1], "H₃CO", "#2563EB", 38);
+      } else if (currentPresetKey === "candidateB") {
+        const L = 30;
+        const nodes = [[104, 132]];
+        for (let i = 0; i < 11; i++) {
+          nodes.push(polarStep(nodes[nodes.length - 1], i % 2 === 0 ? 330 : 30, L));
+        }
+        const s2 = polarStep(nodes[2], 90, L);
+        const s4 = polarStep(nodes[4], 90, L);
+        const s5 = polarStep(nodes[5], 270, L);
+        const s6 = polarStep(nodes[6], 90, L);
+        const s7 = polarStep(nodes[7], 270, L);
+        const s9 = polarStep(nodes[9], 270, L);
+        const s10 = polarStep(nodes[10], 90, L);
+
+        const amineDesc = mods.addIon
+          ? (isIon ? `pKa 조절 아민 양이온 (pKa ${state.pka.toFixed(1)})` : `pKa 조절된 아민 (pKa ${state.pka.toFixed(1)})`)
+          : (isIon ? `양이온 말단 H₃N⁺ (pKa ${state.pka.toFixed(1)})` : `말단 1차 아민 H₂N (pKa ${state.pka.toFixed(1)})`);
+        addZ("ion", 100, 132, 28, 22, amineDesc, 125, 20);
+        addZ("hydro", 262, 124, 158, 52, mods.maskPolar ? "-OH 3개 메틸화 가리움 (-OCH₃)" : "다중 하이드록시기(-OH) · 아마이드 결합 영역", 285, 226);
+
+        for (let i = 0; i < nodes.length - 1; i++) {
+          bonds += svgBond(nodes[i][0], nodes[i][1], nodes[i + 1][0], nodes[i + 1][1]);
+        }
+        bonds += svgDoubleBond(nodes[2][0], nodes[2][1], s2[0], s2[1]);
+        bonds += svgBond(nodes[4][0], nodes[4][1], s4[0], s4[1]);
+        bonds += svgBond(nodes[5][0], nodes[5][1], s5[0], s5[1]);
+        bonds += svgBond(nodes[6][0], nodes[6][1], s6[0], s6[1]);
+        bonds += svgBond(nodes[7][0], nodes[7][1], s7[0], s7[1]);
+        bonds += svgDoubleBond(nodes[9][0], nodes[9][1], s9[0], s9[1]);
+        bonds += svgBond(nodes[10][0], nodes[10][1], s10[0], s10[1]);
+
+        atoms += svgAtomLabel(nodes[0][0], nodes[0][1], isIon ? "H₃N⁺" : "H₂N", isIon ? "#D97706" : "#2563EB", 38);
+        atoms += svgAtomLabel(s2[0], s2[1], "O", "#2563EB");
+        atoms += svgAtomLabel(nodes[3][0], nodes[3][1], "NH", "#2563EB", 28);
+        if (mods.maskPolar) {
+          atoms += svgAtomLabel(s4[0], s4[1], "OCH₃", "#059669", 36);
+          atoms += svgAtomLabel(s5[0], s5[1], "OCH₃", "#059669", 36);
+          atoms += svgAtomLabel(s6[0], s6[1], "OH", "#2563EB", 26);
+          atoms += svgAtomLabel(s7[0], s7[1], "OCH₃", "#059669", 36);
+        } else {
+          atoms += svgAtomLabel(s4[0], s4[1], "OH", "#2563EB", 26);
+          atoms += svgAtomLabel(s5[0], s5[1], "OH", "#2563EB", 26);
+          atoms += svgAtomLabel(s6[0], s6[1], "OH", "#2563EB", 26);
+          atoms += svgAtomLabel(s7[0], s7[1], "OH", "#2563EB", 26);
+        }
+        atoms += svgAtomLabel(nodes[8][0], nodes[8][1], "NH", "#2563EB", 28);
+        atoms += svgAtomLabel(s9[0], s9[1], "O", "#2563EB");
+        atoms += svgAtomLabel(s10[0], s10[1], "OH", "#2563EB", 26);
+        atoms += svgAtomLabel(nodes[11][0], nodes[11][1], "OH", "#2563EB", 26);
+      } else if (currentPresetKey === "candidateC") {
+        const L = 24;
+        const v1 = hexVertices(196, 114, L, 30);
+        const cAlpha = polarStep(v1[3], 210, L);
+        const cMe = polarStep(cAlpha, 270, L);
+        const cCarb = polarStep(cAlpha, 150, L);
+        const oKet = polarStep(cCarb, 90, L);
+        const oOh = polarStep(cCarb, 210, L);
+
+        const oEst = polarStep(v1[0], 30, L);
+        const cEst = polarStep(oEst, 330, L);
+        const oEstKet = polarStep(cEst, 270, L);
+        const cCh2a = polarStep(cEst, 30, L);
+        const cCh2b = polarStep(cCh2a, 330, L);
+        const c2 = polarStep(cCh2b, 30, 2 * L);
+        const v2 = hexVertices(c2[0], c2[1], L, 30);
+        const oMe = polarStep(v2[0], 30, L);
+
+        addZ("ion", 124, 104, 34, 32, isIon ? `이온화 -COO⁻ (pKa ${state.pka.toFixed(1)})` : `카복실기 -COOH (pKa ${state.pka.toFixed(1)})`, 108, 20);
+        addZ("lipo", 196, 114, 32, 32, "방향족 고리 1", 170, 226);
+        if (mods.amide) {
+          addZ("hydro", 250, 122, 30, 28, "아마이드 치환 (-CONH-, 안정)", 335, 20);
+        } else {
+          addZ("danger", 250, 122, 30, 28, "내부 에스터 결합 (-COO-)", 320, 20);
+        }
+        addZ("lipo", 352, 154, 48, 34, "메톡시 방향족 고리 2", 384, 226);
+
+        bonds += svgHexRing(196, 114, L, 30, true);
+        bonds += svgHexRing(c2[0], c2[1], L, 30, true);
+
+        bonds += svgBond(v1[3][0], v1[3][1], cAlpha[0], cAlpha[1]);
+        bonds += svgBond(cAlpha[0], cAlpha[1], cMe[0], cMe[1]);
+        bonds += svgBond(cAlpha[0], cAlpha[1], cCarb[0], cCarb[1]);
+        bonds += svgDoubleBond(cCarb[0], cCarb[1], oKet[0], oKet[1]);
+        bonds += svgBond(cCarb[0], cCarb[1], oOh[0], oOh[1]);
+
+        bonds += svgBond(v1[0][0], v1[0][1], oEst[0], oEst[1], !mods.amide, mods.amide ? "#2563EB" : null);
+        bonds += svgBond(oEst[0], oEst[1], cEst[0], cEst[1]);
+        bonds += svgDoubleBond(cEst[0], cEst[1], oEstKet[0], oEstKet[1]);
+        bonds += svgBond(cEst[0], cEst[1], cCh2a[0], cCh2a[1]);
+        bonds += svgBond(cCh2a[0], cCh2a[1], cCh2b[0], cCh2b[1]);
+        bonds += svgBond(cCh2b[0], cCh2b[1], v2[3][0], v2[3][1]);
+        bonds += svgBond(v2[0][0], v2[0][1], oMe[0], oMe[1]);
+
+        atoms += svgAtomLabel(cMe[0], cMe[1], "CH₃", "#334155", 30);
+        atoms += svgAtomLabel(oKet[0], oKet[1], "O", "#2563EB");
+        atoms += svgAtomLabel(oOh[0], oOh[1], isIon ? "O⁻" : "OH", isIon ? "#D97706" : "#2563EB", 28);
+        atoms += svgAtomLabel(oEst[0], oEst[1], mods.amide ? "NH" : "O", mods.amide ? "#2563EB" : "#DC2626", mods.amide ? 28 : 20);
+        atoms += svgAtomLabel(oEstKet[0], oEstKet[1], "O", mods.amide ? "#2563EB" : "#DC2626");
+        atoms += svgAtomLabel(oMe[0], oMe[1], "OCH₃", "#2563EB", 38);
+      } else if (currentPresetKey === "insulin") {
+        const L = 28;
+        const nodes = [[88, 124]];
+        for (let i = 0; i < 11; i++) {
+          nodes.push(polarStep(nodes[nodes.length - 1], i % 2 === 0 ? 330 : 30, L));
+        }
+        const s2 = polarStep(nodes[2], 90, L);
+        const s4a = polarStep(nodes[4], 90, L);
+        const s4b = polarStep(s4a, 30, L);
+        const s6a = polarStep(nodes[6], 90, L);
+        const s5 = polarStep(nodes[5], 270, L);
+        const s8 = polarStep(nodes[8], 90, L);
+        const s10 = polarStep(nodes[10], 90, L);
+
+        let ionLabel = "양쪽성 이온 (등전점 pI 부근)";
+        if (state.type === "zwitter") {
+          const p1 = Math.min(state.pka, state.pka2), p2 = Math.max(state.pka, state.pka2);
+          if (state.ph < p1) ionLabel = "양이온 (+1, N말단 H₃N⁺ 우세)";
+          else if (state.ph > p2) ionLabel = "음이온 (-1, C말단 COO⁻ 우세)";
+          else ionLabel = `양쪽성 이온 (±0, pI=${((p1+p2)/2).toFixed(1)})`;
+        } else {
+          ionLabel = isIon ? "이온화 말단 · 극성 영역" : "아미노·카복실 말단";
+        }
+
+        addZ("hydro", 180, 118, 86, 40, "펩타이드 사슬 · 다중 수소결합 영역", 135, 20);
+        if (mods.amide) {
+          addZ("hydro", 300, 120, 62, 38, "비천연 아미노산 · 고리화 보호 (안정)", 395, 20);
+        } else {
+          addZ("danger", 300, 120, 62, 38, "위산·효소 가수분해 취약 펩타이드 결합", 390, 20);
+        }
+        addZ("ion", 104, 124, 34, 24, ionLabel, 130, 226);
+        addZ("lipo", 210, 142, 34, 34, "다이설파이드 결합 (-S-S-) 고리", 375, 226);
+
+        for (let i = 0; i < nodes.length - 1; i++) {
+          const isPeptideBreak = !mods.amide && (i === 2 || i === 8);
+          bonds += svgBond(nodes[i][0], nodes[i][1], nodes[i + 1][0], nodes[i + 1][1], isPeptideBreak);
+        }
+        bonds += svgDoubleBond(nodes[2][0], nodes[2][1], s2[0], s2[1]);
+        bonds += svgBond(nodes[4][0], nodes[4][1], s4a[0], s4a[1]);
+        bonds += svgBond(s4a[0], s4a[1], s4b[0], s4b[1]);
+        bonds += svgBond(s4b[0], s4b[1], s6a[0], s6a[1]);
+        bonds += svgBond(s6a[0], s6a[1], nodes[6][0], nodes[6][1]);
+        bonds += svgDoubleBond(nodes[5][0], nodes[5][1], s5[0], s5[1]);
+        bonds += svgDoubleBond(nodes[8][0], nodes[8][1], s8[0], s8[1]);
+        bonds += svgDoubleBond(nodes[10][0], nodes[10][1], s10[0], s10[1]);
+
+        const nTermHigh = state.type === "zwitter" ? (state.ph <= state.pka2) : isIon;
+        const cTermIon = state.type === "zwitter" ? (state.ph >= state.pka) : true;
+        atoms += svgAtomLabel(nodes[0][0], nodes[0][1], nTermHigh ? "H₃N⁺" : "H₂N", nTermHigh ? "#D97706" : "#2563EB", 38);
+        atoms += svgAtomLabel(s2[0], s2[1], "O", "#2563EB");
+        atoms += svgAtomLabel(nodes[3][0], nodes[3][1], mods.amide ? "NMe" : "NH", mods.amide ? "#2563EB" : "#DC2626", 32);
+        atoms += svgAtomLabel(s4a[0], s4a[1], "S", "#047857");
+        atoms += svgAtomLabel(s4b[0], s4b[1], "S", "#047857");
+        atoms += svgAtomLabel(s5[0], s5[1], "O", "#2563EB");
+        atoms += svgAtomLabel(nodes[6][0], nodes[6][1], "NH", "#2563EB", 28);
+        atoms += svgAtomLabel(s8[0], s8[1], "O", "#2563EB");
+        atoms += svgAtomLabel(nodes[9][0], nodes[9][1], mods.amide ? "NMe" : "NH", mods.amide ? "#2563EB" : "#DC2626", 32);
+        atoms += svgAtomLabel(s10[0], s10[1], "O", "#2563EB");
+        atoms += svgAtomLabel(nodes[11][0], nodes[11][1], cTermIon ? "O⁻" : "OH", cTermIon ? "#D97706" : "#2563EB", 28);
+      } else if (currentPresetKey === "metformin") {
+        const L = 32;
+        const n0 = [185, 128];
+        const cMe1 = polarStep(n0, 150, L);
+        const cMe2 = polarStep(n0, 270, L);
+        const c1 = polarStep(n0, 30, L);
+        const nIm1 = polarStep(c1, 90, L);
+        const nBridge = polarStep(c1, 330, L);
+        const c2 = polarStep(nBridge, 30, L);
+        const nIm2 = polarStep(c2, 90, L);
+        const nTerm = polarStep(c2, 330, L);
+
+        addZ("ion", 268, 152, 40, 34, isIon ? `양이온화 =N⁺H₂ (pKa ${state.pka.toFixed(1)})` : `강염기 이민 =NH (pKa ${state.pka.toFixed(1)})`, 275, 20);
+        addZ("lipo", 172, 112, 34, 30, "다이메틸아민기 (-N(CH₃)₂)", 140, 226);
+        addZ("hydro", 254, 148, 56, 36, "공액 바이구아나이드 사슬 (다중 수소결합)", 365, 226);
+
+        bonds += svgBond(n0[0], n0[1], cMe1[0], cMe1[1]);
+        bonds += svgBond(n0[0], n0[1], cMe2[0], cMe2[1]);
+        bonds += svgBond(n0[0], n0[1], c1[0], c1[1]);
+        bonds += svgDoubleBond(c1[0], c1[1], nIm1[0], nIm1[1]);
+        bonds += svgBond(c1[0], c1[1], nBridge[0], nBridge[1]);
+        bonds += svgBond(nBridge[0], nBridge[1], c2[0], c2[1]);
+        bonds += svgDoubleBond(c2[0], c2[1], nIm2[0], nIm2[1]);
+        bonds += svgBond(c2[0], c2[1], nTerm[0], nTerm[1]);
+
+        atoms += svgAtomLabel(n0[0], n0[1], "N", "#0F172A");
+        atoms += svgAtomLabel(cMe1[0], cMe1[1], "H₃C", "#047857", 30);
+        atoms += svgAtomLabel(cMe2[0], cMe2[1], "CH₃", "#047857", 30);
+        atoms += svgAtomLabel(nIm1[0], nIm1[1], "NH", "#2563EB", 28);
+        atoms += svgAtomLabel(nBridge[0], nBridge[1], "NH", "#2563EB", 28);
+        atoms += svgAtomLabel(nIm2[0], nIm2[1], isIon ? "N⁺H₂" : "NH", isIon ? "#D97706" : "#2563EB", isIon ? 38 : 28);
+        atoms += svgAtomLabel(nTerm[0], nTerm[1], "NH₂", "#2563EB", 32);
+      } else if (currentPresetKey === "propranolol") {
+        const L = 26;
+        const c1 = [138, 144];
+        const c2 = [138 + L * Math.sqrt(3), 144];
+        const vL = hexVertices(c1[0], c1[1], L, 30);
+        const vM = hexVertices(c2[0], c2[1], L, 30);
+        const oEth = polarStep(vM[5], 330, L);
+        const cCh2a = polarStep(oEth, 30, L);
+        const cChOh = polarStep(cCh2a, 330, L);
+        const oOh = polarStep(cChOh, 270, L);
+        const cCh2b = polarStep(cChOh, 30, L);
+        const nAm = polarStep(cCh2b, 330, L);
+        const cIso = polarStep(nAm, 30, L);
+        const cMe1 = polarStep(cIso, 90, L);
+        const cMe2 = polarStep(cIso, 330, L);
+
+        addZ("hydro", 252, 118, 42, 36, mods.maskPolar ? "메틸화 에터 사슬 (-OCH₃)" : "에터·알코올 극성 사슬 (-O-CH₂-CH(OH)-)", 270, 20);
+        addZ("lipo", 160, 144, 52, 34, "나프탈렌 고리 (친유성 · 분산력)", 135, 226);
+        addZ("ion", 332, 128, 44, 42, isIon ? `양이온 2차 아민 -N⁺H₂- (pKa ${state.pka.toFixed(1)})` : `약염기 2차 아민 -NH- (pKa ${state.pka.toFixed(1)})`, 405, 226);
+
+        bonds += svgHexRing(c1[0], c1[1], L, 30, true);
+        bonds += svgHexRing(c2[0], c2[1], L, 30, [0, 4]);
+        bonds += svgBond(vM[5][0], vM[5][1], oEth[0], oEth[1]);
+        bonds += svgBond(oEth[0], oEth[1], cCh2a[0], cCh2a[1]);
+        bonds += svgBond(cCh2a[0], cCh2a[1], cChOh[0], cChOh[1]);
+        bonds += svgBond(cChOh[0], cChOh[1], oOh[0], oOh[1]);
+        bonds += svgBond(cChOh[0], cChOh[1], cCh2b[0], cCh2b[1]);
+        bonds += svgBond(cCh2b[0], cCh2b[1], nAm[0], nAm[1]);
+        bonds += svgBond(nAm[0], nAm[1], cIso[0], cIso[1]);
+        bonds += svgBond(cIso[0], cIso[1], cMe1[0], cMe1[1]);
+        bonds += svgBond(cIso[0], cIso[1], cMe2[0], cMe2[1]);
+
+        atoms += svgAtomLabel(oEth[0], oEth[1], "O", "#2563EB");
+        atoms += svgAtomLabel(oOh[0], oOh[1], mods.maskPolar ? "OCH₃" : "OH", mods.maskPolar ? "#059669" : "#2563EB", mods.maskPolar ? 36 : 26);
+        atoms += svgAtomLabel(nAm[0], nAm[1], isIon ? "N⁺H₂" : "NH", isIon ? "#D97706" : "#2563EB", isIon ? 38 : 26);
+        atoms += svgAtomLabel(cMe1[0], cMe1[1], "CH₃", "#334155", 30);
+        atoms += svgAtomLabel(cMe2[0], cMe2[1], "CH₃", "#334155", 30);
+      } else if (currentPresetKey === "candidateD") {
+        const L = 24;
+        const v1 = hexVertices(146, 136, L, 30);
+        const cl1 = polarStep(v1[3], 210, L);
+        const cl2 = polarStep(v1[2], 150, L);
+        const cAm = polarStep(v1[5], 330, L);
+        const oAm = polarStep(cAm, 270, L);
+        const nAm = polarStep(cAm, 30, L);
+        const c2 = polarStep(nAm, 330, 2 * L);
+        const v2 = hexVertices(c2[0], c2[1], L, 30);
+        const cCh2a = polarStep(v2[0], 30, L);
+        const cCh2b = polarStep(cCh2a, 330, L);
+        const nTert = polarStep(cCh2b, 30, L);
+        const cEt1a = polarStep(nTert, 330, L);
+        const cEt1b = polarStep(cEt1a, 30, L);
+        const cEt2a = polarStep(nTert, 90, L);
+        const cEt2b = polarStep(cEt2a, 30, L);
+
+        addZ("hydro", 232, 120, 48, 36, "아마이드 결합 (-C(=O)NH-) · 방향족 고리 2", 245, 20);
+        addZ("lipo", 136, 136, 44, 36, mods.shorten ? "할로젠 제거된 벤젠 고리 (소수성 감소)" : "다이클로로벤젠 고리 (-Cl 2개)", 135, 226);
+        addZ("ion", 344, 122, 42, 42, isIon ? `양이온 3차 아민 -N⁺H(Et)₂ (pKa ${state.pka.toFixed(1)})` : `말단 3차 아민 -N(Et)₂ (pKa ${state.pka.toFixed(1)})`, 395, 226);
+
+        bonds += svgHexRing(146, 136, L, 30, true);
+        bonds += svgHexRing(c2[0], c2[1], L, 30, true);
+        if (!mods.shorten) {
+          bonds += svgBond(v1[3][0], v1[3][1], cl1[0], cl1[1]);
+          bonds += svgBond(v1[2][0], v1[2][1], cl2[0], cl2[1]);
+          atoms += svgAtomLabel(cl1[0], cl1[1], "Cl", "#047857", 22);
+          atoms += svgAtomLabel(cl2[0], cl2[1], "Cl", "#047857", 22);
+        }
+        bonds += svgBond(v1[5][0], v1[5][1], cAm[0], cAm[1]);
+        bonds += svgDoubleBond(cAm[0], cAm[1], oAm[0], oAm[1]);
+        bonds += svgBond(cAm[0], cAm[1], nAm[0], nAm[1]);
+        bonds += svgBond(nAm[0], nAm[1], v2[2][0], v2[2][1]);
+        bonds += svgBond(v2[0][0], v2[0][1], cCh2a[0], cCh2a[1]);
+        bonds += svgBond(cCh2a[0], cCh2a[1], cCh2b[0], cCh2b[1]);
+        bonds += svgBond(cCh2b[0], cCh2b[1], nTert[0], nTert[1]);
+        bonds += svgBond(nTert[0], nTert[1], cEt1a[0], cEt1a[1]);
+        bonds += svgBond(cEt1a[0], cEt1a[1], cEt1b[0], cEt1b[1]);
+        bonds += svgBond(nTert[0], nTert[1], cEt2a[0], cEt2a[1]);
+        bonds += svgBond(cEt2a[0], cEt2a[1], cEt2b[0], cEt2b[1]);
+
+        atoms += svgAtomLabel(oAm[0], oAm[1], "O", "#2563EB");
+        atoms += svgAtomLabel(nAm[0], nAm[1], "NH", "#2563EB", 26);
+        atoms += svgAtomLabel(nTert[0], nTert[1], isIon ? "N⁺H" : "N", isIon ? "#D97706" : "#0F172A", isIon ? 34 : 20);
+        atoms += svgAtomLabel(cEt1b[0], cEt1b[1], "CH₃", "#334155", 30);
+        atoms += svgAtomLabel(cEt2b[0], cEt2b[1], "CH₃", "#334155", 30);
+      } else if (currentPresetKey === "candidateE") {
+        const L = 22;
+        const v1 = hexVertices(136, 134, L, 30);
+        const cIso1 = polarStep(v1[2], 150, L);
+        const cMe1a = polarStep(cIso1, 210, L);
+        const cMe1b = polarStep(cIso1, 90, L);
+        const n1 = polarStep(v1[5], 330, L);
+        const c1k = polarStep(n1, 30, L);
+        const o1 = polarStep(c1k, 90, L);
+        const p1 = polarStep(c1k, 330, L);
+        const oh1 = polarStep(p1, 270, L);
+        const p2 = polarStep(p1, 30, L);
+        const oh2 = polarStep(p2, 90, L);
+        const p3 = polarStep(p2, 330, L);
+        const oh3 = polarStep(p3, 270, L);
+        const c2k = polarStep(p3, 30, L);
+        const o2 = polarStep(c2k, 90, L);
+        const n2 = polarStep(c2k, 330, L);
+        const c2 = polarStep(n2, 30, 2 * L);
+        const v2 = hexVertices(c2[0], c2[1], L, 30);
+        const cEnd = polarStep(v2[0], 30, L);
+
+        addZ("hydro", 238, 126, 62, 44, mods.maskPolar ? "3개 -OH 메틸화 (-OCH₃) · 다이아마이드" : "다중 하이드록시(-OH) · 다이아마이드 사슬", mods.addIon ? 205 : 255, 20);
+        addZ("lipo", 122, 136, 48, 36, mods.shorten ? "단축된 메틸 방향족 고리 1" : "소수성 아이소프로필 방향족 고리 1", 130, 226);
+        addZ("lipo", 338, 134, 34, 30, "방향족 고리 2", 395, 226);
+
+        bonds += svgHexRing(136, 134, L, 30, true);
+        bonds += svgHexRing(c2[0], c2[1], L, 30, true);
+        bonds += svgBond(v1[2][0], v1[2][1], cIso1[0], cIso1[1]);
+        if (!mods.shorten) {
+          bonds += svgBond(cIso1[0], cIso1[1], cMe1a[0], cMe1a[1]);
+          bonds += svgBond(cIso1[0], cIso1[1], cMe1b[0], cMe1b[1]);
+          atoms += svgAtomLabel(cMe1a[0], cMe1a[1], "H₃C", "#047857", 30);
+          atoms += svgAtomLabel(cMe1b[0], cMe1b[1], "CH₃", "#047857", 30);
+        } else {
+          atoms += svgAtomLabel(cIso1[0], cIso1[1], "H₃C", "#047857", 30);
+        }
+        bonds += svgBond(v1[5][0], v1[5][1], n1[0], n1[1]);
+        bonds += svgBond(n1[0], n1[1], c1k[0], c1k[1]);
+        bonds += svgDoubleBond(c1k[0], c1k[1], o1[0], o1[1]);
+        bonds += svgBond(c1k[0], c1k[1], p1[0], p1[1]);
+        bonds += svgBond(p1[0], p1[1], oh1[0], oh1[1]);
+        bonds += svgBond(p1[0], p1[1], p2[0], p2[1]);
+        bonds += svgBond(p2[0], p2[1], oh2[0], oh2[1]);
+        bonds += svgBond(p2[0], p2[1], p3[0], p3[1]);
+        bonds += svgBond(p3[0], p3[1], oh3[0], oh3[1]);
+        bonds += svgBond(p3[0], p3[1], c2k[0], c2k[1]);
+        bonds += svgDoubleBond(c2k[0], c2k[1], o2[0], o2[1]);
+        bonds += svgBond(c2k[0], c2k[1], n2[0], n2[1]);
+        bonds += svgBond(n2[0], n2[1], v2[3][0], v2[3][1]);
+        bonds += svgBond(v2[0][0], v2[0][1], cEnd[0], cEnd[1]);
+
+        if (mods.addIon) {
+          const nIon = polarStep(cEnd, 330, L);
+          const mA = polarStep(nIon, 270, L);
+          const mB = polarStep(nIon, 30, L);
+          bonds += svgBond(cEnd[0], cEnd[1], nIon[0], nIon[1]);
+          bonds += svgBond(nIon[0], nIon[1], mA[0], mA[1]);
+          bonds += svgBond(nIon[0], nIon[1], mB[0], mB[1]);
+          addZ("ion", nIon[0] + 6, nIon[1], 28, 28, isIon ? `도입 아민 -N⁺H(CH₃)₂ (pKa ${state.pka.toFixed(1)})` : `도입 아민 -N(CH₃)₂ (pKa ${state.pka.toFixed(1)})`, 440, 20);
+          atoms += svgAtomLabel(nIon[0], nIon[1], isIon ? "N⁺H" : "N", isIon ? "#D97706" : "#2563EB", isIon ? 34 : 20);
+          atoms += svgAtomLabel(mA[0], mA[1], "CH₃", "#334155", 30);
+          atoms += svgAtomLabel(mB[0], mB[1], "CH₃", "#334155", 30);
+        } else {
+          atoms += svgAtomLabel(cEnd[0], cEnd[1], "CH₃", "#047857", 30);
+        }
+
+        atoms += svgAtomLabel(n1[0], n1[1], "NH", "#2563EB", 24);
+        atoms += svgAtomLabel(o1[0], o1[1], "O", "#2563EB");
+        const ohTxt = mods.maskPolar ? "OCH₃" : "OH";
+        const ohCol = mods.maskPolar ? "#059669" : "#2563EB";
+        const ohW = mods.maskPolar ? 34 : 24;
+        atoms += svgAtomLabel(oh1[0], oh1[1], ohTxt, ohCol, ohW);
+        atoms += svgAtomLabel(oh2[0], oh2[1], ohTxt, ohCol, ohW);
+        atoms += svgAtomLabel(oh3[0], oh3[1], ohTxt, ohCol, ohW);
+        atoms += svgAtomLabel(o2[0], o2[1], "O", "#2563EB");
+        atoms += svgAtomLabel(n2[0], n2[1], "NH", "#2563EB", 24);
+      } else if (currentPresetKey === "candidateF") {
+        const L = 27;
+        const v1 = hexVertices(192, 126, L, 30);
+        const oEth = polarStep(v1[2], 150, L);
+        const cEth1 = polarStep(oEth, 210, L);
+        const cEth2 = polarStep(cEth1, 150, L);
+        const cCh2 = polarStep(v1[5], 330, L);
+        const cAm = polarStep(cCh2, 30, L);
+        const oAm = polarStep(cAm, 90, L);
+        const nAm = polarStep(cAm, 330, L);
+        const cChMe = polarStep(nAm, 30, L);
+        const cMe = polarStep(cChMe, 90, L);
+        const cCh2b = polarStep(cChMe, 330, L);
+        const cCarb = polarStep(cCh2b, 30, L);
+        const oKet = polarStep(cCarb, 90, L);
+        const oOh = polarStep(cCarb, 330, L);
+
+        addZ("hydro", 268, 126, 36, 32, mods.amide ? "안정화된 아마이드 결합" : "아마이드 결합 (-C(=O)NH-CH(CH₃)-)", 240, 20);
+        addZ("lipo", 174, 128, 52, 34, mods.shorten ? "단축된 메톡시 방향족 고리" : "에톡시 방향족 고리 (CH₃CH₂O-)", 145, 226);
+        addZ("ion", 358, 130, 32, 32, isIon ? `이온화 -COO⁻ (pKa ${state.pka.toFixed(1)})` : `말단 카복실기 -COOH (pKa ${state.pka.toFixed(1)})`, 395, 226);
+
+        bonds += svgHexRing(192, 126, L, 30, true);
+        bonds += svgBond(v1[2][0], v1[2][1], oEth[0], oEth[1]);
+        if (!mods.shorten) {
+          bonds += svgBond(oEth[0], oEth[1], cEth1[0], cEth1[1]);
+          bonds += svgBond(cEth1[0], cEth1[1], cEth2[0], cEth2[1]);
+          atoms += svgAtomLabel(oEth[0], oEth[1], "O", "#2563EB");
+          atoms += svgAtomLabel(cEth2[0], cEth2[1], "H₃C", "#047857", 30);
+        } else {
+          atoms += svgAtomLabel(oEth[0], oEth[1], "H₃CO", "#2563EB", 38);
+        }
+        bonds += svgBond(v1[5][0], v1[5][1], cCh2[0], cCh2[1]);
+        bonds += svgBond(cCh2[0], cCh2[1], cAm[0], cAm[1]);
+        bonds += svgDoubleBond(cAm[0], cAm[1], oAm[0], oAm[1]);
+        bonds += svgBond(cAm[0], cAm[1], nAm[0], nAm[1]);
+        bonds += svgBond(nAm[0], nAm[1], cChMe[0], cChMe[1]);
+        bonds += svgBond(cChMe[0], cChMe[1], cMe[0], cMe[1]);
+        bonds += svgBond(cChMe[0], cChMe[1], cCh2b[0], cCh2b[1]);
+        bonds += svgBond(cCh2b[0], cCh2b[1], cCarb[0], cCarb[1]);
+        bonds += svgDoubleBond(cCarb[0], cCarb[1], oKet[0], oKet[1]);
+        bonds += svgBond(cCarb[0], cCarb[1], oOh[0], oOh[1]);
+
+        atoms += svgAtomLabel(oAm[0], oAm[1], "O", "#2563EB");
+        atoms += svgAtomLabel(nAm[0], nAm[1], "NH", "#2563EB", 26);
+        atoms += svgAtomLabel(cMe[0], cMe[1], "CH₃", "#334155", 30);
+        atoms += svgAtomLabel(oKet[0], oKet[1], "O", "#2563EB");
+        atoms += svgAtomLabel(oOh[0], oOh[1], isIon ? "O⁻" : "OH", isIon ? "#D97706" : "#2563EB", 28);
+      }
+
+      svg.innerHTML = zoneShapes + bonds + atoms + zoneLabels;
+    }
+
+    function renderMoleculePanel() {
+      const p = PRESETS[currentPresetKey];
+      const activeModNames = Object.entries(state.mods || {}).filter(([, v]) => v).map(([k]) => MOD_LABELS[k]);
+      const modified =
+        activeModNames.length > 0 ||
+        Math.abs(state.mw - p.mw) > 0.1 ||
+        Math.abs(state.logP - p.logP) > 0.01 ||
+        state.hbd !== p.hbd ||
+        state.hba !== p.hba ||
+        Math.abs(state.tpsa - p.tpsa) > 0.1 ||
+        state.type !== p.type ||
+        Math.abs(state.pka - p.pka) > 0.05;
+
+      document.getElementById("mol-formula-badge").textContent = modified
+        ? `${p.formula} (${activeModNames.length ? activeModNames.join(" + ") : "슬라이더 변형"})`
+        : p.formula;
+      document.getElementById("mol-class-text").textContent = p.molClass;
+      document.getElementById("mol-smiles-text").textContent = activeModNames.length
+        ? `${p.smiles}  [개질: ${activeModNames.join(", ")}]`
+        : p.smiles;
+      document.getElementById("mol-dg-text").innerHTML = `<b>${state.dgBind.toFixed(1)} kcal/mol</b> <span style="font-size:0.74rem; color:#64748B;">(AI 도킹 예측 · 음수가 클수록 결합 강함)</span>`;
+
+      document.querySelectorAll(".hl-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.hl === highlightMode);
+      });
+
+      let supportedModCount = 0;
+      document.querySelectorAll(".mod-btn").forEach(btn => {
+        const modKey = btn.dataset.mod;
+        const meta = getModMeta(currentPresetKey, modKey);
+        if (meta.ok) supportedModCount++;
+        btn.disabled = !meta.ok;
+        btn.classList.toggle("active", meta.ok && !!(state.mods && state.mods[modKey]));
+        btn.innerHTML = `${meta.title}<small>${meta.sub}</small>`;
+      });
+      const resetModsBtn = document.getElementById("btn-reset-mods");
+      if (resetModsBtn) resetModsBtn.disabled = activeModNames.length === 0;
+      document.getElementById("mod-status-text").innerHTML = activeModNames.length
+        ? `<span class="badge purple">개질 적용: ${activeModNames.join(" + ")}</span>`
+        : (supportedModCount === 0
+          ? `이 물질은 치환할 작용기가 없어 원형 유지 (STEP 3 제형 실험 권장)`
+          : `현재 개질: 원본 구조 그대로 (활성화된 ${supportedModCount}종만 치환 가능)`);
+
+      const phRes = calcPhBehavior(state.ph, state);
+      const organ = ORGANS.find(o => Math.abs(o.ph - state.ph) < 0.05);
+      const envLabel = organ ? `${organ.name} (pH ${state.ph.toFixed(1)})` : `관찰 환경 pH ${state.ph.toFixed(1)}`;
+      const phBox = document.getElementById("mol-ph-state-box");
+
+      if (state.type === "acid") {
+        const ionTxt = phRes.fIon >= 0.5 ? "음이온 형태(-COO⁻ / -O⁻) 우세 → 물 용해 유리" : "중성 분자 형태(-COOH / -OH) 우세 → 세포막 투과 유리";
+        phBox.innerHTML = `<b>현재 작용기 상태 [${envLabel}]:</b><br>중성 <b>${(phRes.fNeu * 100).toFixed(1)}%</b> : 이온화 <b>${(phRes.fIon * 100).toFixed(1)}%</b> — ${ionTxt}`;
+      } else if (state.type === "base") {
+        const ionTxt = phRes.fIon >= 0.5 ? "양이온 형태(-N⁺HR₂) 우세 → 물 용해 유리" : "중성 아민 형태(-NR₂) 우세 → 세포막 투과 유리";
+        phBox.innerHTML = `<b>현재 작용기 상태 [${envLabel}]:</b><br>중성 <b>${(phRes.fNeu * 100).toFixed(1)}%</b> : 이온화 <b>${(phRes.fIon * 100).toFixed(1)}%</b> — ${ionTxt}`;
+      } else if (state.type === "zwitter") {
+        const p1 = Math.min(state.pka, state.pka2), p2 = Math.max(state.pka, state.pka2);
+        const pI = ((p1 + p2) / 2).toFixed(1);
+        phBox.innerHTML = `<b>양쪽성 이온 상태 [${envLabel} · pI ${pI}]:</b><br>양이온(+1) <b>${(phRes.fCat * 100).toFixed(1)}%</b> · 양쪽성이온(±0) <b>${(phRes.fNeu * 100).toFixed(1)}%</b> · 음이온(-1) <b>${(phRes.fAn * 100).toFixed(1)}%</b>`;
+      } else {
+        phBox.innerHTML = `<b>현재 작용기 상태 [${envLabel}]:</b><br>이온화되는 산·염기 작용기가 없는 비이온성 구조(중성 100%)입니다.`;
+      }
+
+      drawMoleculeStructure();
+    }
+
+    // ==================== 5. RENDERING FUNCTIONS ====================
+    function renderSummary() {
+      const lip = calcLipinski(state);
+      const bcs = calcBCS(state);
+      const pk = simulatePK(state);
+
+      let s1Badge = `<span class="badge pass">양호</span>`;
+      if (lip.lipinskiViolations >= 2 || lip.tpsaFail) {
+        s1Badge = `<span class="badge fail">물성 부적합</span>`;
+      } else if (state.stability === "danger" || lip.lipinskiViolations === 1) {
+        s1Badge = `<span class="badge warn">보완 필요</span>`;
+      }
+      document.getElementById("sum-step1").innerHTML = `${s1Badge} <span style="font-size:0.78rem; color:#64748B;">(위반 ${lip.lipinskiViolations}건)</span>`;
+
+      document.getElementById("sum-step2").innerHTML = `<span class="badge ${bcs.badgeClass}">${bcs.bcsClass}</span> <span style="font-size:0.78rem; color:#64748B;">${bcs.bcsDesc.split("(")[0]}</span>`;
+
+      let s3Badge = `<span class="badge pass">${pk.capValidH.toFixed(1)} 시간</span>`;
+      if (pk.capValidH < 4.0) s3Badge = `<span class="badge fail">${pk.capValidH.toFixed(1)} 시간</span>`;
+      else if (pk.capToxicH > 0.2) s3Badge = `<span class="badge warn">독성 주의 (${pk.capValidH.toFixed(1)}h)</span>`;
+      document.getElementById("sum-step3").innerHTML = `${s3Badge} <span style="font-size:0.78rem; color:#64748B;">(속방정 ${pk.irValidH.toFixed(1)}h)</span>`;
+
+      let overallHTML = `<span class="badge pass">경구 신약 유망</span>`;
+      const enhancerRescued = state.enhancer && state.enteric && pk.capValidH >= 4.0;
+      if (enhancerRescued && (bcs.bcsClass === "Class III" || currentPresetKey === "insulin")) {
+        overallHTML = `<span class="badge pass">차세대 전달체로 극복</span>`;
+      } else if (bcs.bcsClass === "Class IV" || lip.lipinskiViolations >= 2 || lip.tpsaFail || state.logS0 < -5.5) {
+        overallHTML = `<span class="badge fail">물성·흡수 재설계 필요</span>`;
+      } else if (state.stability === "danger" && !state.enteric) {
+        overallHTML = `<span class="badge warn">장용성 캡슐 적용 권장</span>`;
+      } else if (bcs.bcsClass === "Class II" || bcs.bcsClass === "Class III") {
+        overallHTML = `<span class="badge warn">유도체/제형 개선 필요</span>`;
+      } else if (state.stability === "danger" && state.enteric && pk.capValidH >= 5.0) {
+        overallHTML = `<span class="badge pass">캡슐 제형으로 극복 가능</span>`;
+      }
+      document.getElementById("sum-overall").innerHTML = overallHTML;
+    }
+
+    function renderTab1() {
+      document.getElementById("val-mw").textContent = state.mw.toFixed(1);
+      document.getElementById("val-logp").textContent = state.logP.toFixed(2);
+      document.getElementById("val-hbd").textContent = state.hbd;
+      document.getElementById("val-hba").textContent = state.hba;
+      document.getElementById("val-tpsa").textContent = state.tpsa.toFixed(1);
+      document.getElementById("inp-stability").value = state.stability;
+
+      const isMacro = state.mw > 700 || currentPresetKey === "insulin";
+      document.getElementById("hint-mw").textContent = isMacro
+        ? "거대 생체분자 스케일 자동 확장 (100~6,500 g/mol) — 경구 권장(≤500) 대폭 초과"
+        : "분자 크기·전자 구름 증가 → 분산력 증가 (권장 ≤ 500)";
+
+      const lip = calcLipinski(state);
+      const badge = document.getElementById("lipinski-badge");
+      if (lip.lipinskiViolations >= 2 || lip.tpsaFail) {
+        badge.className = "badge fail";
+        badge.textContent = "경구 적합성 미달";
+      } else if (lip.lipinskiViolations === 1 || state.stability !== "stable") {
+        badge.className = "badge warn";
+        badge.textContent = "조건부 주의";
+      } else {
+        badge.className = "badge pass";
+        badge.textContent = "약물성 기준 통과";
+      }
+
+      const tbody = document.querySelector("#lipinski-table tbody");
+      tbody.innerHTML = lip.checks.map(c => `
+        <tr>
+          <td>${c.label}</td>
+          <td>${c.rule}</td>
+          <td><b>${c.val}</b></td>
+          <td><span class="badge ${c.ok ? 'pass' : 'fail'}">${c.ok ? '적합' : '초과'}</span></td>
+        </tr>
+      `).join("");
+
+      const hydroScore = Math.min(100, Math.round((state.hbd * 7 + state.hba * 3.5 + state.tpsa * 0.25)));
+      const lipoScore = Math.min(100, Math.max(0, Math.round((state.logP + 2) * 10 + (Math.min(state.mw, 900) - 100) * 0.04)));
+
+      document.getElementById("hydro-bar").style.width = hydroScore + "%";
+      document.getElementById("hydro-score-text").textContent = `${hydroScore} / 100`;
+      document.getElementById("lipo-bar").style.width = lipoScore + "%";
+      document.getElementById("lipo-score-text").textContent = `${lipoScore} / 100`;
+
+      const s0MgL = Math.pow(10, state.logS0) * state.mw * 1000;
+      document.getElementById("t1-logs0").textContent = state.logS0.toFixed(2);
+      document.getElementById("t1-s0-mgl").textContent = `약 ${formatSol(s0MgL)} (중성)`;
+      document.getElementById("t1-violations").textContent = `${lip.lipinskiViolations} 개`;
+
+      const diagBox = document.getElementById("t1-diagnosis");
+      const diagText = document.getElementById("t1-diag-text");
+      const msgs = [];
+      let status = "pass";
+
+      if (state.logP > 5.0 || state.logS0 < -4.5) {
+        status = "fail";
+        msgs.push(`<b>소수성·분산력 과다 (용해 실패):</b> log P(${state.logP.toFixed(2)})와 분자량(${state.mw.toFixed(0)})이 커 무극성 성질이 지나치게 강합니다. 물 분자와의 수소결합이 부족해 소화액·혈액에 거의 녹지 않습니다.`);
+      }
+      if (state.hbd > 5 || state.hba > 10 || state.tpsa > 140 || state.logP < -0.5) {
+        status = "fail";
+        msgs.push(`<b>수소결합·극성 과다 (세포막 투과 실패):</b> 수소결합 주개(${state.hbd}개)·받개(${state.hba}개)와 극성 표면적(${state.tpsa.toFixed(0)} Å²)이 너무 커 물 분자에 강하게 둘러싸입니다. 무극성 인지질 이중층(세포막)을 통과하기 어렵습니다.`);
+      }
+      if (state.stability === "danger") {
+        if (status === "pass") status = "warn";
+        msgs.push(`<b>화학적 안정성 경고:</b> 위산(강산)에서 쉽게 가수분해되는 작용기를 포함합니다. 상단의 <b>아마이드 치환</b> 또는 Step 3 <b>장용성 캡슐</b>이 필요합니다.`);
+      } else if (state.stability === "caution") {
+        if (status === "pass") status = "warn";
+        msgs.push(`<b>안정성 주의:</b> 산성 환경에서 일부 가수분해될 수 있으므로 pH 경로 확인이 필요합니다.`);
+      }
+
+      if (msgs.length === 0) {
+        msgs.push(`<b>친수성-친유성 균형 양호:</b> 물과의 수소결합·쌍극자 힘(용해)과 세포막 지질과의 분산력(막 투과)이 리핀스키 5법칙 및 극성 표면적 기준 이내에서 조화롭게 유지되고 있습니다.`);
+      }
+
+      diagBox.className = `diag-box ${status}`;
+      diagText.innerHTML = msgs.join("<br>");
+
+      drawRadarChart();
+      drawParetoChart();
+    }
+
+    function drawRadarChart() {
+      const svg = document.getElementById("svg-radar");
+      const cx = 210, cy = 172, R = 108;
+      const limitFrac = 0.65;
+
+      const axes = [
+        { name: "분자량 (MW)", val: state.mw, limit: 500, disp: `${state.mw.toFixed(0)}` },
+        { name: "친유성 (log P)", val: Math.max(0, state.logP), limit: 5.0, disp: `${state.logP.toFixed(1)}` },
+        { name: "수소결합 주개", val: state.hbd, limit: 5, disp: `${state.hbd}` },
+        { name: "수소결합 받개", val: state.hba, limit: 10, disp: `${state.hba}` },
+        { name: "극성표면적", val: state.tpsa, limit: 140, disp: `${state.tpsa.toFixed(0)}` }
+      ];
+
+      const n = axes.length;
+      const angleFor = (i) => -Math.PI / 2 + (2 * Math.PI * i) / n;
+
+      let gridHTML = "";
+      [0.325, 0.65, 1.0].forEach((f, idx) => {
+        const pts = axes.map((_, i) => {
+          const a = angleFor(i);
+          return `${(cx + R * f * Math.cos(a)).toFixed(1)},${(cy + R * f * Math.sin(a)).toFixed(1)}`;
+        }).join(" ");
+        if (idx === 1) {
+          gridHTML += `<polygon points="${pts}" fill="#ECFDF5" fill-opacity="0.45" stroke="#059669" stroke-width="1.8" stroke-dasharray="5,3" />`;
+        } else {
+          gridHTML += `<polygon points="${pts}" fill="none" stroke="#E2E8F0" stroke-width="1" />`;
+        }
+      });
+
+      let axisHTML = "";
+      const dataPts = [];
+      axes.forEach((ax, i) => {
+        const a = angleFor(i);
+        const xEnd = cx + R * Math.cos(a);
+        const yEnd = cy + R * Math.sin(a);
+        axisHTML += `<line x1="${cx}" y1="${cy}" x2="${xEnd.toFixed(1)}" y2="${yEnd.toFixed(1)}" stroke="#CBD5E1" stroke-width="1" />`;
+
+        const lx = cx + (R + 28) * Math.cos(a);
+        const ly = cy + (R + 22) * Math.sin(a);
+        const anchor = Math.abs(Math.cos(a)) < 0.2 ? "middle" : (Math.cos(a) > 0 ? "start" : "end");
+        const over = ax.val > ax.limit;
+        axisHTML += `<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="${anchor}" font-size="11.5" font-weight="700" fill="${over ? '#DC2626' : '#334155'}">${ax.name}</text>`;
+        axisHTML += `<text x="${lx.toFixed(1)}" y="${(ly + 14).toFixed(1)}" text-anchor="${anchor}" font-size="10.5" fill="${over ? '#DC2626' : '#64748B'}">(${ax.disp} / ${ax.limit})</text>`;
+
+        const ratio = Math.min(1.0, (ax.val / ax.limit) * limitFrac);
+        dataPts.push([cx + R * ratio * Math.cos(a), cy + R * ratio * Math.sin(a), over]);
+      });
+
+      const polyStr = dataPts.map(p => `${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(" ");
+      const hasFail = dataPts.some(p => p[2]);
+      const strokeCol = hasFail ? "#DC2626" : "#2563EB";
+      const fillCol = hasFail ? "rgba(220,38,38,0.18)" : "rgba(37,99,235,0.18)";
+
+      const dotsHTML = dataPts.map(p => `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="4" fill="${p[2] ? '#DC2626' : '#2563EB'}" stroke="#FFFFFF" stroke-width="1.5" />`).join("");
+
+      svg.innerHTML = `
+        ${gridHTML}
+        ${axisHTML}
+        <polygon points="${polyStr}" fill="${fillCol}" stroke="${strokeCol}" stroke-width="2.4" />
+        ${dotsHTML}
+        <g transform="translate(14, 16)">
+          <line x1="0" y1="6" x2="18" y2="6" stroke="#059669" stroke-width="2" stroke-dasharray="4,2" />
+          <text x="24" y="10" font-size="11" fill="#065F46" font-weight="600">녹색 점선: 약물성 허용 한계</text>
+          <rect x="0" y="18" width="18" height="10" fill="${fillCol}" stroke="${strokeCol}" stroke-width="1.5" />
+          <text x="24" y="27" font-size="11" fill="#1E293B" font-weight="600">실선 다각형: 현재 후보 물성</text>
+        </g>
+      `;
+    }
+
+    function drawParetoChart() {
+      const svg = document.getElementById("svg-pareto");
+      const W = 760, H = 255;
+      const m = { l: 64, r: 28, t: 28, b: 44 };
+      const pW = W - m.l - m.r, pH = H - m.t - m.b;
+
+      const xPx = (fPct) => m.l + (Math.max(0, Math.min(100, fPct)) / 100) * pW;
+      // Y-axis: binding strength -dG_bind from 6.0 (bottom) to 12.2 (top)
+      const yMin = 6.0, yMax = 12.2;
+      const yPx = (negDg) => m.t + pH - ((Math.max(yMin, Math.min(yMax, negDg)) - yMin) / (yMax - yMin)) * pH;
+
+      const origP = PRESETS[currentPresetKey];
+      const origF = calcMolecularBioavailability(origP, false);
+      const curF = calcMolecularBioavailability(state, false);
+      const formF = calcMolecularBioavailability(state, true);
+      const origAff = -origP.dgBind;
+      const curAff = -state.dgBind;
+
+      const xCut = xPx(55);
+      const yCut = yPx(8.0);
+
+      let grid = "";
+      [0, 25, 50, 75, 100].forEach(v => {
+        const x = xPx(v);
+        grid += `<line x1="${x}" y1="${m.t}" x2="${x}" y2="${m.t + pH}" stroke="#F1F5F9" stroke-width="1" />`;
+        grid += `<text x="${x}" y="${H - m.b + 16}" text-anchor="middle" font-size="10.5" fill="#475569">${v}%</text>`;
+      });
+      [6, 8, 10, 12].forEach(v => {
+        const y = yPx(v);
+        grid += `<line x1="${m.l}" y1="${y}" x2="${W - m.r}" y2="${y}" stroke="#F1F5F9" stroke-width="1" />`;
+        grid += `<text x="${m.l - 8}" y="${y + 4}" text-anchor="end" font-size="10.5" fill="#64748B">-${v}</text>`;
+      });
+
+      // Other presets landscape
+      let bgDots = "";
+      Object.entries(PRESETS).forEach(([k, pr]) => {
+        if (k === currentPresetKey) return;
+        const pf = calcMolecularBioavailability(pr, false);
+        const px = xPx(pf), py = yPx(-pr.dgBind);
+        const shortName = pr.name.split(" (")[0].replace("AI 후보 ", "후보");
+        bgDots += `<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="4" fill="${k.startsWith('candidate') ? '#CBD5E1' : '#93C5FD'}" stroke="#64748B" stroke-width="0.8" />`;
+        bgDots += `<text x="${(px + 6).toFixed(1)}" y="${(py + 3).toFixed(1)}" font-size="9" fill="#64748B">${shortName}</text>`;
+      });
+
+      const ox = xPx(origF), oy = yPx(origAff);
+      const cx = xPx(curF), cy = yPx(curAff);
+      const moved = Math.hypot(cx - ox, cy - oy) > 5;
+      const fx = xPx(formF);
+      const showFormDot = Math.abs(formF - curF) >= 6;
+
+      let vectorLine = "";
+      if (moved) {
+        vectorLine = `<line x1="${ox.toFixed(1)}" y1="${oy.toFixed(1)}" x2="${cx.toFixed(1)}" y2="${cy.toFixed(1)}" stroke="#7C3AED" stroke-width="2.2" marker-end="url(#pareto-arrow)" />`;
+      }
+
+      const inSweet = curF >= 55 && curAff >= 8.0;
+      const pBadge = document.getElementById("pareto-badge");
+      if (inSweet || (showFormDot && formF >= 55 && curAff >= 8.0)) {
+        pBadge.className = "badge pass";
+        pBadge.textContent = "Pareto 최적 신약 영역 도달";
+      } else if (curF < 40 && curAff >= 9.0) {
+        pBadge.className = "badge fail";
+        pBadge.textContent = "AI 함정 구간 (결합력↑ · 흡수 실패)";
+      } else {
+        pBadge.className = "badge warn";
+        pBadge.textContent = "개질 최적화 여지 있음";
+      }
+
+      const sumEl = document.getElementById("pareto-summary");
+      sumEl.innerHTML = `<b>원본 분자 예측 생체이용률:</b> ${origF}% (결합력 ${origP.dgBind.toFixed(1)} kcal/mol) → <b>현재 분자:</b> ${curF}% (${state.dgBind.toFixed(1)} kcal/mol)`
+        + (showFormDot ? ` · <b style="color:#059669;">Step 3 제형(장용성·SNAC) 적용 시:</b> ${formF}%` : "");
+
+      svg.innerHTML = `
+        <defs>
+          <marker id="pareto-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+            <path d="M 0 1 L 9 5 L 0 9 z" fill="#7C3AED" />
+          </marker>
+        </defs>
+        ${grid}
+        <!-- Quadrant shading -->
+        <rect x="${xCut}" y="${m.t}" width="${m.l + pW - xCut}" height="${yCut - m.t}" fill="#ECFDF5" fill-opacity="0.7" />
+        <rect x="${m.l}" y="${m.t}" width="${xCut - m.l}" height="${yCut - m.t}" fill="#FEF2F2" fill-opacity="0.45" />
+        <line x1="${xCut}" y1="${m.t}" x2="${xCut}" y2="${m.t + pH}" stroke="#94A3B8" stroke-dasharray="4,3" stroke-width="1.2" />
+        <line x1="${m.l}" y1="${yCut}" x2="${m.l + pW}" y2="${yCut}" stroke="#94A3B8" stroke-dasharray="4,3" stroke-width="1.2" />
+
+        <text x="${m.l + 8}" y="${m.t + 16}" font-size="10.5" font-weight="700" fill="#B91C1C">AI 후보 함정 구간 (결합력만 높고 경구 흡수 실패)</text>
+        <text x="${W - m.r - 8}" y="${m.t + 16}" text-anchor="end" font-size="10.5" font-weight="700" fill="#047857">Pareto 최적 영역 (고결합력 + 고생체이용률)</text>
+
+        <rect x="${m.l}" y="${m.t}" width="${pW}" height="${pH}" fill="none" stroke="#94A3B8" stroke-width="1.2" />
+        <text x="${m.l + pW / 2}" y="${H - 8}" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1E293B">분자 고유 경구 생체이용률 예측 (%)</text>
+        <text x="16" y="${m.t + pH / 2}" text-anchor="middle" font-size="11" font-weight="700" fill="#1E293B" transform="rotate(-90 16 ${m.t + pH / 2})">표적 결합력 (ΔG_bind, kcal/mol)</text>
+
+        ${bgDots}
+        ${vectorLine}
+
+        ${moved ? `
+          <circle cx="${ox.toFixed(1)}" cy="${oy.toFixed(1)}" r="6" fill="#FFFFFF" stroke="#7C3AED" stroke-width="2" stroke-dasharray="3,2" />
+          <text x="${ox.toFixed(1)}" y="${(oy + 16).toFixed(1)}" text-anchor="middle" font-size="9.5" font-weight="700" fill="#6D28D9">개질 전(${origF}%)</text>
+        ` : ''}
+
+        ${showFormDot ? `
+          <line x1="${cx.toFixed(1)}" y1="${cy.toFixed(1)}" x2="${fx.toFixed(1)}" y2="${cy.toFixed(1)}" stroke="#059669" stroke-width="1.6" stroke-dasharray="3,2" />
+          <polygon points="${fx.toFixed(1)},${(cy - 7).toFixed(1)} ${(fx + 7).toFixed(1)},${cy.toFixed(1)} ${fx.toFixed(1)},${(cy + 7).toFixed(1)} ${(fx - 7).toFixed(1)},${cy.toFixed(1)}" fill="#059669" stroke="#FFFFFF" stroke-width="1.5" />
+          <text x="${fx.toFixed(1)}" y="${(cy - 11).toFixed(1)}" text-anchor="middle" font-size="9.5" font-weight="700" fill="#047857">제형 적용(${formF}%)</text>
+        ` : ''}
+
+        <circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="7.5" fill="#DC2626" stroke="#FFFFFF" stroke-width="2" />
+        <text x="${cx.toFixed(1)}" y="${(cy - 11).toFixed(1)}" text-anchor="middle" font-size="10.2" font-weight="700" fill="#0F172A">현재(${curF}%)</text>
+      `;
+    }
+
+    function renderTab2() {
+      document.querySelectorAll("#acid-type-group .seg-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.type === state.type);
+      });
+
+      const pkaGroup = document.getElementById("pka-control-group");
+      const pka2Group = document.getElementById("pka2-control-group");
+      pkaGroup.style.opacity = state.type === "neutral" ? "0.45" : "1";
+      document.getElementById("inp-pka").disabled = state.type === "neutral";
+
+      const isZwitter = state.type === "zwitter";
+      pka2Group.style.display = isZwitter ? "flex" : "none";
+      document.getElementById("lbl-pka").innerHTML = isZwitter ? "산성기 해리 지수 (pK<sub>a1</sub>)" : "산 해리 지수 (pK<sub>a</sub>)";
+      document.getElementById("hint-pka").textContent = isZwitter
+        ? "pH < pKa1 구간에서 양이온(+1)으로 해리되는 기준 지수"
+        : "이온화 분율과 비이온화 분율이 50% : 50%가 되는 pH";
+
+      const hintMap = {
+        acid: "약산성 HA ⇌ H⁺ + A⁻ (pH > pKa 이면 음이온 A⁻ 증가 → 물 용해도 급증)",
+        base: "약염기성 BH⁺ ⇌ H⁺ + B (pH < pKa 이면 양이온 BH⁺ 증가 → 물 용해도 급증)",
+        zwitter: "양쪽성 H₂A⁺ ⇌ HA± ⇌ A⁻ (등전점 pI에서 알짜 전하 0 · U자형 용해도 최소)",
+        neutral: "비이온성 분자로 pH가 변해도 전하를 띠지 않음 (용해도·투과성 일정)"
+      };
+      document.getElementById("type-chem-hint").textContent = hintMap[state.type];
+
+      document.getElementById("val-pka").textContent = state.pka.toFixed(1);
+      const pka2Val = state.pka2 !== undefined ? state.pka2 : 8.6;
+      document.getElementById("val-pka2").textContent = pka2Val.toFixed(1);
+      document.getElementById("val-pi").textContent = ((state.pka + pka2Val) / 2).toFixed(2);
+      document.getElementById("val-logs0").textContent = state.logS0.toFixed(2);
+      document.getElementById("val-ph").textContent = state.ph.toFixed(1);
+
+      document.querySelectorAll(".organ-btn").forEach(btn => {
+        btn.classList.toggle("active", Math.abs(parseFloat(btn.dataset.ph) - state.ph) < 0.05);
+      });
+
+      const matchedOrgan = ORGANS.find(o => Math.abs(o.ph - state.ph) < 0.05);
+      document.getElementById("t2-current-organ").textContent = matchedOrgan
+        ? `현재: ${matchedOrgan.name} (pH ${state.ph.toFixed(1)})`
+        : `현재 관찰 pH ${state.ph.toFixed(1)}`;
+
+      const tbody = document.querySelector("#organ-compare-table tbody");
+      tbody.innerHTML = ORGANS.map(o => {
+        const res = calcPhBehavior(o.ph, state);
+        const isCur = Math.abs(o.ph - state.ph) < 0.05;
+        return `
+          <tr class="${isCur ? 'highlight-row' : ''}">
+            <td>${o.name} (${o.ph})</td>
+            <td>${(res.fNeu * 100).toFixed(1)}%</td>
+            <td>${(res.fIon * 100).toFixed(1)}%</td>
+            <td>${res.logSph.toFixed(2)}</td>
+            <td>${res.logDph.toFixed(2)}</td>
+          </tr>
+        `;
+      }).join("");
+
+      const bcs = calcBCS(state);
+      const bcsBadge = document.getElementById("bcs-badge");
+      bcsBadge.className = `badge ${bcs.badgeClass}`;
+      bcsBadge.textContent = bcs.bcsClass;
+
+      const cur = calcPhBehavior(state.ph, state);
+      const stom = calcPhBehavior(1.5, state);
+      const blood = calcPhBehavior(7.4, state);
+      const diagBox = document.getElementById("t2-diagnosis");
+      const diagText = document.getElementById("t2-diag-text");
+
+      let text = `현재 <b>pH ${state.ph.toFixed(1)}</b>에서 알짜 중성 비율은 <b>${(cur.fNeu * 100).toFixed(1)}%</b>, 순전하 이온 비율은 <b>${(cur.fIon * 100).toFixed(1)}%</b>이며 예상 물 용해도는 <b>${formatSol(cur.solMgL)}</b>입니다.<br>`;
+      if (state.type === "acid") {
+        text += `• <b>산성 약물 거동:</b> 위(pH 1.5)에서는 대부분 중성(HA, ${(stom.fNeu*100).toFixed(1)}%)으로 존재해 위 점막 통과는 쉽지만 물에 덜 녹고, 소장(pH 6.5)과 혈액(pH 7.4)으로 이동할수록 음이온(A⁻, ${(blood.fIon*100).toFixed(1)}%) 비율이 높아져 물 용해도가 증가합니다.`;
+      } else if (state.type === "base") {
+        text += `• <b>염기성 약물 거동:</b> 위(pH 1.5)에서는 H⁺를 받아 양이온(BH⁺, ${(stom.fIon*100).toFixed(1)}%)이 되어 위액에 잘 녹지만 세포막을 통과하지 못하며, 소장(pH 6.5)과 혈액(pH 7.4)에서 중성(B, ${(blood.fNeu*100).toFixed(1)}%) 비율이 회복되면서 흡수가 일어납니다.`;
+      } else if (state.type === "zwitter") {
+        const pI = ((state.pka + pka2Val) / 2).toFixed(2);
+        text += `• <b>양쪽성 전해질 거동 (등전점 pI = ${pI}):</b> 등전점(${pI}) 근처(소장 pH 6.5 포함)에서는 양쪽성 이온(HA±, 중성 알짜전하 0) 비율이 최대가 되어 물 용해도가 최소(U자 곡선의 바닥)로 내려가며, 등전점보다 훨씬 낮은 위(pH 1.5)나 높은 염기성에서는 순전하를 띠어 용해도가 다시 증가합니다.`;
+      } else {
+        text += `• <b>비이온성 약물 거동:</b> 산·염기 작용기가 없어 pH가 변해도 이온화되지 않습니다. 고유 용해도(log S₀=${state.logS0.toFixed(2)})와 친유성(log P=${state.logP.toFixed(2)})이 체내 흡수를 그대로 좌우합니다.`;
+      }
+
+      diagBox.className = `diag-box ${bcs.badgeClass}`;
+      diagText.innerHTML = text;
+
+      drawPhCurves();
+      drawBCSChart(bcs);
+      drawIonTrappingDiagram();
+    }
+
+    function drawPhCurves() {
+      const svg = document.getElementById("svg-ph-curves");
+      const W = 760, H = 350;
+      const m = { l: 62, r: 64, t: 44, b: 48 };
+      const pW = W - m.l - m.r;
+      const pH = H - m.t - m.b;
+
+      const xPx = (ph) => m.l + ((ph - 1.0) / 8.0) * pW;
+      const yPctPx = (pct) => m.t + pH - (pct / 100) * pH;
+      const logMin = -7, logMax = 5;
+      const yLogPx = (val) => {
+        const clamped = Math.max(logMin, Math.min(logMax, val));
+        return m.t + pH - ((clamped - logMin) / (logMax - logMin)) * pH;
+      };
+
+      const ptsIon = [], ptsNeu = [], ptsLogS = [], ptsLogD = [];
+      for (let i = 0; i <= 160; i++) {
+        const ph = 1.0 + (8.0 * i) / 160;
+        const r = calcPhBehavior(ph, state);
+        ptsIon.push([xPx(ph), yPctPx(r.fIon * 100)]);
+        ptsNeu.push([xPx(ph), yPctPx(r.fNeu * 100)]);
+        ptsLogS.push([xPx(ph), yLogPx(r.logSph)]);
+        ptsLogD.push([xPx(ph), yLogPx(r.logDph)]);
+      }
+
+      const toD = (pts) => pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(" ");
+
+      let gridHTML = "";
+      [0, 25, 50, 75, 100].forEach(pct => {
+        const y = yPctPx(pct);
+        gridHTML += `<line x1="${m.l}" y1="${y}" x2="${W - m.r}" y2="${y}" stroke="#F1F5F9" stroke-width="1" />`;
+        gridHTML += `<text x="${m.l - 8}" y="${y + 4}" text-anchor="end" font-size="11" fill="#64748B">${pct}%</text>`;
+      });
+
+      [-6, -3, 0, 3, 5].forEach(lv => {
+        const y = yLogPx(lv);
+        gridHTML += `<text x="${W - m.r + 8}" y="${y + 4}" text-anchor="start" font-size="11" fill="#64748B">${lv}</text>`;
+      });
+
+      for (let ph = 1; ph <= 9; ph++) {
+        const x = xPx(ph);
+        gridHTML += `<line x1="${x}" y1="${m.t}" x2="${x}" y2="${H - m.b}" stroke="#F1F5F9" stroke-width="1" />`;
+        gridHTML += `<text x="${x}" y="${H - m.b + 18}" text-anchor="middle" font-size="11" fill="#475569">${ph}</text>`;
+      }
+
+      const organGuides = [
+        { ph: 1.5, label: "위(1.5)" },
+        { ph: 6.5, label: "소장(6.5)" },
+        { ph: 7.4, label: "혈액(7.4)" }
+      ].map(g => {
+        const x = xPx(g.ph);
+        return `
+          <line x1="${x}" y1="${m.t}" x2="${x}" y2="${H - m.b}" stroke="#CBD5E1" stroke-width="1.2" stroke-dasharray="3,3" />
+          <text x="${x}" y="${m.t - 6}" text-anchor="middle" font-size="10.5" font-weight="600" fill="#475569">${g.label}</text>
+        `;
+      }).join("");
+
+      let piGuide = "";
+      if (state.type === "zwitter") {
+        const pI = (state.pka + (state.pka2 !== undefined ? state.pka2 : 8.6)) / 2;
+        if (pI >= 1.0 && pI <= 9.0) {
+          const xPi = xPx(pI);
+          piGuide = `
+            <line x1="${xPi}" y1="${m.t}" x2="${xPi}" y2="${H - m.b}" stroke="#7C3AED" stroke-width="1.5" stroke-dasharray="4,2" />
+            <text x="${xPi}" y="${m.t + 14}" text-anchor="middle" font-size="10" font-weight="700" fill="#6D28D9">pI(${pI.toFixed(1)})</text>
+          `;
+        }
+      }
+
+      const curX = xPx(state.ph);
+      const curRes = calcPhBehavior(state.ph, state);
+
+      svg.innerHTML = `
+        ${gridHTML}
+        ${organGuides}
+        ${piGuide}
+        <rect x="${m.l}" y="${m.t}" width="${pW}" height="${pH}" fill="none" stroke="#94A3B8" stroke-width="1.2" />
+        <text x="${m.l + pW / 2}" y="${H - 10}" text-anchor="middle" font-size="12" font-weight="700" fill="#1E293B">환경 pH</text>
+        <text x="16" y="${m.t + pH / 2}" text-anchor="middle" font-size="11.5" font-weight="700" fill="#2563EB" transform="rotate(-90 16 ${m.t + pH / 2})">이온화 / 중성 분율 (%)</text>
+        <text x="${W - 14}" y="${m.t + pH / 2}" text-anchor="middle" font-size="11.5" font-weight="700" fill="#059669" transform="rotate(90 ${W - 14} ${m.t + pH / 2})">용해도(log S) · 투과성(log D)</text>
+
+        <path d="${toD(ptsIon)}" fill="none" stroke="#2563EB" stroke-width="2.6" />
+        <path d="${toD(ptsNeu)}" fill="none" stroke="#94A3B8" stroke-width="2" stroke-dasharray="5,4" />
+        <path d="${toD(ptsLogS)}" fill="none" stroke="#059669" stroke-width="2.6" />
+        <path d="${toD(ptsLogD)}" fill="none" stroke="#D97706" stroke-width="2.6" />
+
+        <line x1="${curX}" y1="${m.t}" x2="${curX}" y2="${H - m.b}" stroke="#DC2626" stroke-width="2" />
+        <circle cx="${curX}" cy="${yPctPx(curRes.fIon * 100)}" r="4.5" fill="#2563EB" stroke="#FFFFFF" stroke-width="1.5" />
+        <circle cx="${curX}" cy="${yLogPx(curRes.logSph)}" r="4.5" fill="#059669" stroke="#FFFFFF" stroke-width="1.5" />
+        <circle cx="${curX}" cy="${yLogPx(curRes.logDph)}" r="4.5" fill="#D97706" stroke="#FFFFFF" stroke-width="1.5" />
+
+        <g transform="translate(${m.l}, 12)">
+          <line x1="0" y1="6" x2="18" y2="6" stroke="#2563EB" stroke-width="2.6" />
+          <text x="23" y="10" font-size="11" font-weight="600" fill="#1E293B">이온화 분율(%)</text>
+
+          <line x1="125" y1="6" x2="143" y2="6" stroke="#94A3B8" stroke-width="2" stroke-dasharray="4,3" />
+          <text x="148" y="10" font-size="11" font-weight="600" fill="#475569">중성(비이온) 분율(%)</text>
+
+          <line x1="280" y1="6" x2="298" y2="6" stroke="#059669" stroke-width="2.6" />
+          <text x="303" y="10" font-size="11" font-weight="600" fill="#065F46">물 용해도 (log S)</text>
+
+          <line x1="420" y1="6" x2="438" y2="6" stroke="#D97706" stroke-width="2.6" />
+          <text x="443" y="10" font-size="11" font-weight="600" fill="#92400E">막 투과성 (log D)</text>
+        </g>
+      `;
+    }
+
+    function drawBCSChart(bcs) {
+      const svg = document.getElementById("svg-bcs");
+      const m = { l: 46, r: 16, t: 18, b: 36 };
+      const W = 360, H = 220;
+      const pW = W - m.l - m.r, pH = H - m.t - m.b;
+
+      const xMin = -7.5, xMax = 2.5;
+      const yMin = -5.0, yMax = 6.5;
+      const xPx = (v) => m.l + ((Math.max(xMin, Math.min(xMax, v)) - xMin) / (xMax - xMin)) * pW;
+      const yPx = (v) => m.t + pH - ((Math.max(yMin, Math.min(yMax, v)) - yMin) / (yMax - yMin)) * pH;
+
+      const xCut = xPx(-2.0);
+      const yCut = yPx(-1.8);
+      const px = xPx(bcs.logS65);
+      const py = yPx(bcs.logD65);
+
+      svg.innerHTML = `
+        <rect x="${m.l}" y="${m.t}" width="${xCut - m.l}" height="${yCut - m.t}" fill="#FFFBEB" />
+        <rect x="${xCut}" y="${m.t}" width="${m.l + pW - xCut}" height="${yCut - m.t}" fill="#ECFDF5" />
+        <rect x="${m.l}" y="${yCut}" width="${xCut - m.l}" height="${m.t + pH - yCut}" fill="#FEF2F2" />
+        <rect x="${xCut}" y="${yCut}" width="${m.l + pW - xCut}" height="${m.t + pH - yCut}" fill="#EFF6FF" />
+
+        <line x1="${xCut}" y1="${m.t}" x2="${xCut}" y2="${m.t + pH}" stroke="#64748B" stroke-width="1.2" stroke-dasharray="4,3" />
+        <line x1="${m.l}" y1="${yCut}" x2="${m.l + pW}" y2="${yCut}" stroke="#64748B" stroke-width="1.2" stroke-dasharray="4,3" />
+        <rect x="${m.l}" y="${m.t}" width="${pW}" height="${pH}" fill="none" stroke="#94A3B8" stroke-width="1.2" />
+
+        <text x="${(m.l + xCut)/2}" y="${m.t + 18}" text-anchor="middle" font-size="11" font-weight="700" fill="#B45309">Class II (저용해·고투과)</text>
+        <text x="${(xCut + m.l + pW)/2}" y="${m.t + 18}" text-anchor="middle" font-size="11" font-weight="700" fill="#047857">Class I (고용해·고투과)</text>
+        <text x="${(m.l + xCut)/2}" y="${m.t + pH - 10}" text-anchor="middle" font-size="11" font-weight="700" fill="#B91C1C">Class IV (저용해·저투과)</text>
+        <text x="${(xCut + m.l + pW)/2}" y="${m.t + pH - 10}" text-anchor="middle" font-size="11" font-weight="700" fill="#1D4ED8">Class III (고용해·저투과)</text>
+
+        <text x="${m.l + pW / 2}" y="${H - 8}" text-anchor="middle" font-size="11" font-weight="700" fill="#334155">소장 용해도 (log S₆.₅)</text>
+        <text x="14" y="${m.t + pH / 2}" text-anchor="middle" font-size="11" font-weight="700" fill="#334155" transform="rotate(-90 14 ${m.t + pH / 2})">투과성 (log D₆.₅)</text>
+
+        <circle cx="${px}" cy="${py}" r="7" fill="#DC2626" stroke="#FFFFFF" stroke-width="2" />
+        <text x="${px}" y="${py - 11}" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0F172A">현재 후보</text>
+      `;
+    }
+
+    function drawIonTrappingDiagram() {
+      document.querySelectorAll("#trap-route-group .route-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.route === trapRoute);
+      });
+
+      const svg = document.getElementById("svg-ion-trap");
+      const trap = calcIonTrapping(trapRoute, state);
+      const { rt, b1, b2, ratio2to1, ratio1to2, permLimited } = trap;
+
+      const fmtRatio = (r) => r >= 1000 ? `${Math.round(r).toLocaleString()}배` : (r >= 10 ? `${r.toFixed(1)}배` : `${r.toFixed(2)}배`);
+      const badgeEl = document.getElementById("trap-ratio-badge");
+
+      let trapSummary = "";
+      if (state.type === "neutral") {
+        badgeEl.className = "badge info";
+        badgeEl.textContent = "이온 포획 없음 (1.0 : 1.0)";
+        trapSummary = `비이온성 분자는 양쪽 구획에서 이온화되지 않으므로 농도 비가 <b>1 : 1</b>로 균등 분포합니다.`;
+      } else if (permLimited) {
+        badgeEl.className = "badge warn";
+        badgeEl.textContent = `막 투과 장벽 (이론비 1 : ${ratio2to1 >= 1 ? ratio2to1.toFixed(1) : (1/ratio2to1).toFixed(1)})`;
+        trapSummary = `<b>세포막 투과 한계:</b> 열역학적으로는 한쪽(${ratio2to1 >= 1 ? rt.name2 : rt.name1})이 유리하나, 현재 분자량(${state.mw.toFixed(0)}) 또는 극성표면적(${state.tpsa.toFixed(0)} Å²)이 커 중성 분자의 인지질 이중층 통과 자체가 매우 느립니다.`;
+      } else if (ratio2to1 >= 2.0) {
+        badgeEl.className = ratio2to1 > 100 ? "badge warn" : "badge info";
+        badgeEl.textContent = `${rt.name2}에 약 ${fmtRatio(ratio2to1)} 축적`;
+        trapSummary = `<b>이온 포획 방향 (${rt.name1} → ${rt.name2}):</b> ${rt.name1}(pH ${rt.ph1})에서 중성 비율(${(b1.fNeu*100).toFixed(1)}%)로 막을 통과한 약물이 ${rt.name2}(pH ${rt.ph2})에서 이온화(${(b2.fIon*100).toFixed(1)}%)되어 되돌아 나오지 못하고 약 <b>${fmtRatio(ratio2to1)}</b> 농축됩니다.`
+          + (trapRoute === "stomach-blood" && state.type === "acid" ? " (예: 아스피린 등 약산성 진통제가 위 점막 세포에 축적되어 위장 자극을 일으키는 화학적 원리)" : "");
+      } else if (ratio1to2 >= 2.0) {
+        badgeEl.className = ratio1to2 > 50 ? "badge warn" : "badge info";
+        badgeEl.textContent = `${rt.name1} 쪽에 약 ${fmtRatio(ratio1to2)} 잔류`;
+        trapSummary = `<b>이온 포획 방향 (${rt.name2} → ${rt.name1}):</b> ${rt.name1}(pH ${rt.ph1})에서 이미 대부분 이온(${(b1.fIon*100).toFixed(1)}%)으로 존재해 ${rt.name2}(pH ${rt.ph2}) 대비 <b>${fmtRatio(ratio1to2)}</b> 더 많이 머무르려는 경향을 보입니다.`;
+      } else {
+        badgeEl.className = "badge pass";
+        badgeEl.textContent = `균형 분포 (${ratio2to1.toFixed(2)}배)`;
+        trapSummary = `양쪽 환경에서 중성 분율 차이가 크지 않아 특정 구획에 심하게 갇히지 않고 비교적 고르게 평형을 이룹니다.`;
+      }
+      document.getElementById("ion-trap-desc").innerHTML = trapSummary;
+
+      const share1 = 1 / (1 + ratio2to1);
+      const share2 = ratio2to1 / (1 + ratio2to1);
+      const bar1W = Math.round(share1 * 210);
+      const bar2W = Math.round(share2 * 210);
+
+      svg.innerHTML = `
+        <defs>
+          <marker id="trap-arrow-r" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+            <path d="M 0 1 L 8 5 L 0 9 z" fill="#059669" />
+          </marker>
+        </defs>
+        <!-- Left Compartment -->
+        <rect x="18" y="14" width="250" height="176" rx="8" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.4" />
+        <text x="143" y="36" text-anchor="middle" font-size="12.5" font-weight="700" fill="#0F172A">${rt.name1} (pH ${rt.ph1})</text>
+        <text x="143" y="56" text-anchor="middle" font-size="11" fill="#334155">중성: <tspan font-weight="700" fill="#047857">${(b1.fNeu*100).toFixed(1)}%</tspan>  |  이온: <tspan font-weight="700" fill="#2563EB">${(b1.fIon*100).toFixed(1)}%</tspan></text>
+        <text x="34" y="84" font-size="10.5" font-weight="600" fill="#475569">평형 총 농도 비율 (${(share1*100).toFixed(1)}%)</text>
+        <rect x="34" y="92" width="210" height="16" rx="4" fill="#E2E8F0" />
+        <rect x="34" y="92" width="${Math.max(4, bar1W)}" height="16" rx="4" fill="#2563EB" />
+        <text x="143" y="135" text-anchor="middle" font-size="10.5" fill="#475569">중성 농도 [HA/B] = 동일 평형</text>
+        <rect x="68" y="146" width="150" height="24" rx="5" fill="#FFFFFF" stroke="#94A3B8" />
+        <text x="143" y="162" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1E293B">상대 총농도: 1.00</text>
+
+        <!-- Center Lipid Bilayer -->
+        <rect x="318" y="14" width="124" height="176" rx="6" fill="#FFFBEB" stroke="#F59E0B" stroke-width="1.6" stroke-dasharray="4,3" />
+        <text x="380" y="38" text-anchor="middle" font-size="11.5" font-weight="700" fill="#B45309">인지질 이중층</text>
+        <text x="380" y="54" text-anchor="middle" font-size="10" fill="#92400E">(무극성 세포막)</text>
+
+        <line x1="274" y1="98" x2="314" y2="98" stroke="#059669" stroke-width="2.2" marker-end="url(#trap-arrow-r)" />
+        <line x1="446" y1="98" x2="486" y2="98" stroke="#059669" stroke-width="2.2" marker-end="url(#trap-arrow-r)" />
+        <rect x="328" y="84" width="104" height="28" rx="5" fill="#ECFDF5" stroke="#059669" />
+        <text x="380" y="102" text-anchor="middle" font-size="10" font-weight="700" fill="#047857">${permLimited ? '막 투과 제한됨' : '중성 분자만 확산 ⇌'}</text>
+        <text x="380" y="145" text-anchor="middle" font-size="9.5" fill="#B91C1C" font-weight="600">전하 띤 이온(A⁻·BH⁺)</text>
+        <text x="380" y="160" text-anchor="middle" font-size="9.5" fill="#B91C1C" font-weight="600">막 통과 불가 → 포획!</text>
+
+        <!-- Right Compartment -->
+        <rect x="492" y="14" width="250" height="176" rx="8" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.4" />
+        <text x="617" y="36" text-anchor="middle" font-size="12.5" font-weight="700" fill="#0F172A">${rt.name2} (pH ${rt.ph2})</text>
+        <text x="617" y="56" text-anchor="middle" font-size="11" fill="#334155">중성: <tspan font-weight="700" fill="#047857">${(b2.fNeu*100).toFixed(1)}%</tspan>  |  이온: <tspan font-weight="700" fill="#2563EB">${(b2.fIon*100).toFixed(1)}%</tspan></text>
+        <text x="508" y="84" font-size="10.5" font-weight="600" fill="#475569">평형 총 농도 비율 (${(share2*100).toFixed(1)}%)</text>
+        <rect x="508" y="92" width="210" height="16" rx="4" fill="#E2E8F0" />
+        <rect x="508" y="92" width="${Math.max(4, bar2W)}" height="16" rx="4" fill="#D97706" />
+        <text x="617" y="135" text-anchor="middle" font-size="10.5" fill="#475569">이온 비율 높을수록 이온 형태로 축적</text>
+        <rect x="542" y="146" width="150" height="24" rx="5" fill="#FFFFFF" stroke="#94A3B8" />
+        <text x="617" y="162" text-anchor="middle" font-size="10.5" font-weight="700" fill="#B45309">상대 총농도: ${ratio2to1 >= 100 ? Math.round(ratio2to1).toLocaleString() : ratio2to1.toFixed(2)}</text>
+      `;
+    }
+
+    function renderTab3() {
+      document.querySelectorAll("#dose-mode-group .seg-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.dmode === doseMode);
+      });
+      document.getElementById("dose-mode-hint").textContent = doseMode === "multi3"
+        ? "속방정 8시간 간격 3회 복용(0·8·16h, 회당 0.55×D₀)의 농도 요동 vs 1일 1회 캡슐 비교"
+        : "단회 복용 시 초기 폭발 방출 억제 및 지속 시간 비교";
+
+      document.getElementById("val-thick").textContent = `${state.thick} μm`;
+      document.getElementById("val-diff").textContent = `${state.diff.toFixed(1)}×`;
+      document.getElementById("val-halflife").textContent = `${state.halfLife.toFixed(1)} h`;
+      document.getElementById("val-dose").textContent = `${state.dose} mg`;
+      document.getElementById("inp-enteric").checked = state.enteric;
+      document.getElementById("inp-enhancer").checked = !!state.enhancer;
+
+      const pk = simulatePK(state);
+      const optThick = findOptimalThickness(state);
+
+      document.getElementById("m-cap-time").textContent = `${pk.capValidH.toFixed(1)} 시간`;
+      document.getElementById("m-ir-time").textContent = `${doseMode === 'multi3' ? '속방 3회' : '속방정'}: ${pk.irValidH.toFixed(1)} 시간`;
+      document.getElementById("m-cap-cmax").textContent = `${pk.capCmax.toFixed(2)} mg/L`;
+      document.getElementById("m-ir-cmax").textContent = `${doseMode === 'multi3' ? '속방 3회' : '속방정'}: ${pk.irCmax.toFixed(2)} mg/L`;
+      document.getElementById("m-cap-loss").textContent = `${pk.capLossPct.toFixed(0)}%`;
+      document.getElementById("m-ir-loss").textContent = `속방정: ${pk.irLossPct.toFixed(0)}%`;
+      document.getElementById("m-opt-thick").textContent = `${optThick} μm`;
+
+      const badge = document.getElementById("t3-opt-badge");
+      const diagBox = document.getElementById("t3-diagnosis");
+      const diagText = document.getElementById("t3-diag-text");
+
+      let status = "pass";
+      if (pk.capToxicH > 0.2) {
+        status = "warn";
+        badge.className = "badge warn";
+        badge.textContent = "독성 역치(MTC) 초과";
+      } else if (pk.capValidH < 4.0) {
+        status = "fail";
+        badge.className = "badge fail";
+        badge.textContent = "유효 시간 부족";
+      } else {
+        badge.className = "badge pass";
+        badge.textContent = `치료 구간 ${pk.capValidH.toFixed(1)}시간 유지`;
+      }
+
+      const ratio = pk.irValidH > 0 ? (pk.capValidH / pk.irValidH).toFixed(1) : "∞";
+      let msg = `고분자 캡슐 두께 <b>${state.thick} μm</b> 적용 시 확산 속도 상수는 <b>k<sub>rel</sub> = ${pk.k_rel.toFixed(2)} h⁻¹</b>이며, 치료 유효 농도(1.8~7.5 mg/L) 유지 시간이 ${doseMode === 'multi3' ? '속방정 3회 복용' : '일반 속방정'}(${pk.irValidH.toFixed(1)}시간) 대비 <b>${pk.capValidH.toFixed(1)}시간 (${ratio}배)</b>으로 나타났습니다.<br>`;
+      if (state.stability === "danger" && !state.enteric) {
+        msg += `• <b>주의:</b> 현재 위산 불안정 물질인데 <b>장용성 코팅이 꺼져 있어</b> 위 구간(0~1.5h)에서 약물이 손실됩니다. 장용성 코팅을 켜면 위산 손실률 0%로 보호할 수 있습니다.`;
+      } else if (pk.capToxicH > 0.2) {
+        msg += `• <b>두께 증가 권장:</b> 막 두께가 얇아 초기 확산이 빠릅니다. 두께를 권장 최적값(<b>${optThick} μm</b>) 쪽으로 늘리면 최고 농도를 낮추고 안전 구간을 연장할 수 있습니다.`;
+      } else if (pk.capCmax < pk.MEC) {
+        msg += `• <b>흡수 부족 또는 두께 과다:</b> 유효 농도(1.8 mg/L)에 도달하지 못했습니다. 막 투과성 한계(BCS III·거대분자) 때문이라면 <b>투과 촉진제 · 나노전달체(SNAC/LNP)</b> 옵션을 켜거나 두께를(<b>${optThick} μm</b>) 조절해 보세요.`;
+      } else {
+        msg += `• <b>제형 안정화 성공:</b> 픽의 확산 법칙과 소화관 연속 이동 모델에서 1일 1회 투여로도 안정적인 혈중 유효 농도가 유지됩니다. (추천 최적 두께: <b>${optThick} μm</b>${state.enhancer ? ' · 전달체 병용 활성' : ''})`;
+      }
+
+      diagBox.className = `diag-box ${status}`;
+      diagText.innerHTML = msg;
+
+      drawPKChart(pk);
+      drawCapsuleDiagram(pk);
+    }
+
+    function drawPKChart(pk) {
+      const svg = document.getElementById("svg-pk");
+      const W = 760, H = 340;
+      const m = { l: 58, r: 28, t: 38, b: 46 };
+      const pW = W - m.l - m.r, pH = H - m.t - m.b;
+
+      const yMax = Math.max(11.0, Math.ceil(Math.max(pk.irCmax, pk.capCmax) + 1.5));
+      const xPx = (t) => m.l + (t / 24) * pW;
+      const yPx = (c) => m.t + pH - (Math.min(c, yMax) / yMax) * pH;
+
+      let gridHTML = "";
+      for (let t = 0; t <= 24; t += 4) {
+        const x = xPx(t);
+        gridHTML += `<line x1="${x}" y1="${m.t}" x2="${x}" y2="${H - m.b}" stroke="#F1F5F9" stroke-width="1" />`;
+        gridHTML += `<text x="${x}" y="${H - m.b + 17}" text-anchor="middle" font-size="11" fill="#475569">${t}h</text>`;
+      }
+      const yStep = yMax > 14 ? 4 : 2;
+      for (let c = 0; c <= yMax; c += yStep) {
+        const y = yPx(c);
+        gridHTML += `<line x1="${m.l}" y1="${y}" x2="${W - m.r}" y2="${y}" stroke="#F1F5F9" stroke-width="1" />`;
+        gridHTML += `<text x="${m.l - 8}" y="${y + 4}" text-anchor="end" font-size="11" fill="#64748B">${c}</text>`;
+      }
+
+      const yMEC = yPx(pk.MEC);
+      const yMTC = yPx(pk.MTC);
+      const toD = (pts) => pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${xPx(p[0]).toFixed(1)} ${yPx(p[1]).toFixed(1)}`).join(" ");
+
+      svg.innerHTML = `
+        ${gridHTML}
+        <!-- GI Transit top zones -->
+        <rect x="${m.l}" y="${m.t}" width="${xPx(1.5) - m.l}" height="${pH}" fill="#EFF6FF" opacity="0.45" />
+        <text x="${(m.l + xPx(1.5))/2}" y="${m.t + 13}" text-anchor="middle" font-size="9" font-weight="700" fill="#1D4ED8">위 (0~1.5h)</text>
+        <line x1="${xPx(6.0)}" y1="${m.t}" x2="${xPx(6.0)}" y2="${H - m.b}" stroke="#CBD5E1" stroke-width="1" stroke-dasharray="3,3" />
+        <text x="${(xPx(1.5) + xPx(6.0))/2}" y="${m.t + 13}" text-anchor="middle" font-size="9" font-weight="700" fill="#047857">소장 (1.5~6h · pH 6.5)</text>
+        <text x="${(xPx(6.0) + W - m.r)/2}" y="${m.t + 13}" text-anchor="middle" font-size="9" font-weight="600" fill="#64748B">대장 · 체순환 (6~24h)</text>
+
+        <!-- Therapeutic Window Band -->
+        <rect x="${m.l}" y="${yMTC}" width="${pW}" height="${yMEC - yMTC}" fill="#ECFDF5" opacity="0.72" />
+        <line x1="${m.l}" y1="${yMTC}" x2="${W - m.r}" y2="${yMTC}" stroke="#DC2626" stroke-width="1.5" stroke-dasharray="6,4" />
+        <line x1="${m.l}" y1="${yMEC}" x2="${W - m.r}" y2="${yMEC}" stroke="#059669" stroke-width="1.5" stroke-dasharray="6,4" />
+
+        <text x="${W - m.r - 6}" y="${yMTC - 5}" text-anchor="end" font-size="10.5" font-weight="700" fill="#DC2626">최소 독성 농도 MTC (${pk.MTC} mg/L)</text>
+        <text x="${W - m.r - 6}" y="${yMEC - 5}" text-anchor="end" font-size="10.5" font-weight="700" fill="#047857">최소 유효 농도 MEC (${pk.MEC} mg/L)</text>
+
+        <!-- Curves -->
+        <path d="${toD(pk.irPts)}" fill="none" stroke="#DC2626" stroke-width="2.2" stroke-dasharray="5,4" />
+        <path d="${toD(pk.capPts)}" fill="none" stroke="#2563EB" stroke-width="3" />
+
+        <!-- Axes -->
+        <rect x="${m.l}" y="${m.t}" width="${pW}" height="${pH}" fill="none" stroke="#94A3B8" stroke-width="1.2" />
+        <text x="${m.l + pW / 2}" y="${H - 10}" text-anchor="middle" font-size="12" font-weight="700" fill="#1E293B">투여 후 경과 시간 (시간)</text>
+        <text x="16" y="${m.t + pH / 2}" text-anchor="middle" font-size="12" font-weight="700" fill="#1E293B" transform="rotate(-90 16 ${m.t + pH / 2})">혈중 약물 농도 (mg/L)</text>
+
+        <!-- Legend -->
+        <g transform="translate(${m.l}, 12)">
+          <line x1="0" y1="6" x2="22" y2="6" stroke="#2563EB" stroke-width="3" />
+          <text x="27" y="10" font-size="11.2" font-weight="700" fill="#1E293B">고분자 캡슐 1회 (${state.thick} μm${state.enhancer ? '+SNAC' : ''})</text>
+
+          <line x1="255" y1="6" x2="277" y2="6" stroke="#DC2626" stroke-width="2.2" stroke-dasharray="5,4" />
+          <text x="282" y="10" font-size="11.2" font-weight="600" fill="#991B1B">${pk.dMode === 'multi3' ? '속방정 8h×3회 복용' : '일반 속방정 (캡슐 미적용)'}</text>
+
+          <rect x="465" y="0" width="14" height="12" fill="#ECFDF5" stroke="#059669" stroke-width="1" />
+          <text x="484" y="10" font-size="11.2" font-weight="600" fill="#065F46">치료 유효 농도 구간</text>
+        </g>
+      `;
+    }
+
+    function drawCapsuleDiagram(pk) {
+      const svg = document.getElementById("svg-capsule");
+      const cx = 135, cy = 95;
+      const coreR = 36;
+      const shellPx = 4 + ((state.thick - 10) / 190) * 32;
+      const outerR = coreR + shellPx;
+      const arrowLen = Math.max(14, Math.min(48, 38 * Math.sqrt(pk.k_rel)));
+
+      const nanoRing = state.enhancer
+        ? `<circle cx="${cx}" cy="${cy}" r="${(coreR + 5).toFixed(1)}" fill="none" stroke="#7C3AED" stroke-width="2.4" stroke-dasharray="4,3" />`
+        : '';
+
+      svg.innerHTML = `
+        <defs>
+          <marker id="diff-arrow" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+            <path d="M 0 1 L 8 5 L 0 9 z" fill="#2563EB" />
+          </marker>
+        </defs>
+        <circle cx="${cx}" cy="${cy}" r="${outerR.toFixed(1)}" fill="${state.enteric ? '#DBEAFE' : '#E2E8F0'}" stroke="#2563EB" stroke-width="2" />
+        ${nanoRing}
+        <circle cx="${cx}" cy="${cy}" r="${coreR}" fill="#FEF3C7" stroke="#D97706" stroke-width="1.8" />
+        <text x="${cx}" y="${cy - 3}" text-anchor="middle" font-size="11" font-weight="700" fill="#92400E">약물 코어</text>
+        <text x="${cx}" y="${cy + 13}" text-anchor="middle" font-size="10" fill="#B45309">(고농도 C<sub>in</sub>)</text>
+
+        <line x1="${cx + coreR + 2}" y1="${cy}" x2="${cx + coreR + 2 + arrowLen}" y2="${cy}" stroke="#2563EB" stroke-width="2.4" marker-end="url(#diff-arrow)" />
+        <line x1="${cx}" y1="${cy - coreR - 2}" x2="${cx}" y2="${cy - coreR - 2 - arrowLen}" stroke="#2563EB" stroke-width="2.4" marker-end="url(#diff-arrow)" />
+        <line x1="${cx - coreR - 2}" y1="${cy}" x2="${cx - coreR - 2 - arrowLen}" y2="${cy}" stroke="#2563EB" stroke-width="2.4" marker-end="url(#diff-arrow)" />
+        <line x1="${cx}" y1="${cy + coreR + 2}" x2="${cx}" y2="${cy + coreR + 2 + arrowLen}" stroke="#2563EB" stroke-width="2.4" marker-end="url(#diff-arrow)" />
+
+        <text x="240" y="48" font-size="11.5" font-weight="700" fill="#1E293B">고분자 막 두께 (L)</text>
+        <text x="240" y="66" font-size="13" font-weight="700" fill="#2563EB">${state.thick} μm</text>
+
+        <text x="240" y="96" font-size="11.5" font-weight="700" fill="#1E293B">확산 방출 속도 상수</text>
+        <text x="240" y="114" font-size="13" font-weight="700" fill="#059669">k<sub>rel</sub> = ${pk.k_rel.toFixed(2)} h⁻¹</text>
+
+        <text x="240" y="142" font-size="10.2" fill="#475569">${state.enteric ? '장용성 코팅 ON (위 1.5h 차단)' : '일반 고분자 코팅'}</text>
+        <text x="240" y="160" font-size="10.2" font-weight="700" fill="${state.enhancer ? '#6D28D9' : '#94A3B8'}">${state.enhancer ? 'SNAC / LNP 전달체 ON' : '투과 촉진제 미적용'}</text>
+      `;
+    }
+
+    function escapeHtml(str) {
+      return String(str || "").replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[ch]));
+    }
+
+    function renderLogbook() {
+      const container = document.getElementById("logbook-container");
+      if (logbook.length === 0) {
+        container.innerHTML = `<div class="empty-state">아직 기록된 실험 조건이 없습니다. 시뮬레이터를 조작한 뒤 <b>[+ 실험 기록장에 추가]</b> 또는 <b>[+ 현재 조건 비교 기록]</b>을 눌러 데이터를 저장하세요.</div>`;
+        return;
+      }
+
+      container.innerHTML = `
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>물질명 · 적용 개질</th>
+              <th>MW / log P / TPSA</th>
+              <th>산·염기 (pKa)</th>
+              <th>소장 BCS (전 → 후)</th>
+              <th>제형 (두께 / 장용 / SNAC)</th>
+              <th>유효시간 (전 → 후 / 속방)</th>
+              <th>탐구 고찰 메모</th>
+              <th class="no-print">삭제</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${logbook.map((item, idx) => `
+              <tr>
+                <td>${idx + 1}</td>
+                <td><b>${escapeHtml(item.name)}</b>${item.mods ? `<br><span class="badge purple" style="margin-top:2px; font-size:0.68rem;">${escapeHtml(item.mods)}</span>` : ''}</td>
+                <td>${escapeHtml(item.mw)} / ${escapeHtml(item.logP)} / ${escapeHtml(item.tpsa)}</td>
+                <td>${escapeHtml(item.typeLabel)}</td>
+                <td>${item.origBcs && item.origBcs !== item.bcsClass ? `<span style="color:#64748B;">${escapeHtml(item.origBcs)} →</span> ` : ''}<span class="badge ${item.bcsBadge}">${escapeHtml(item.bcsClass)}</span></td>
+                <td>${item.thick} μm / ${item.enteric ? 'ON' : 'OFF'} / ${item.enhancer ? 'ON' : 'OFF'}</td>
+                <td>${item.origCapTime && item.origCapTime !== item.capTime ? `<span style="color:#64748B;">${item.origCapTime}h →</span> ` : ''}<b>${item.capTime}h</b> / 속방 ${item.irTime}h</td>
+                <td><input type="text" class="log-memo-edit" value="${escapeHtml(item.note || '')}" onchange="updateLogNote(${idx}, this.value)" placeholder="고찰 메모..." /></td>
+                <td class="no-print"><button class="btn" style="padding:3px 8px; font-size:0.76rem;" onclick="removeLog(${idx})">삭제</button></td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      `;
+    }
+
+    window.updateLogNote = function(idx, val) {
+      if (logbook[idx]) {
+        logbook[idx].note = val;
+        saveLogbook();
+      }
+    };
+
+    window.removeLog = function(idx) {
+      logbook.splice(idx, 1);
+      saveLogbook();
+      renderLogbook();
+    };
+
+    function addLogEntry() {
+      const origP = { ...PRESETS[currentPresetKey], mods: { amide: false, shorten: false, maskPolar: false, addIon: false } };
+      const origBcs = calcBCS(origP);
+      const origPk = simulatePK(origP, origP.thick, doseMode);
+
+      const bcs = calcBCS(state);
+      const pk = simulatePK(state);
+      const activeModNames = Object.entries(state.mods || {}).filter(([, v]) => v).map(([k]) => MOD_LABELS[k]);
+      const typeMap = {
+        acid: `약산(${state.pka.toFixed(1)})`,
+        base: `약염기(${state.pka.toFixed(1)})`,
+        zwitter: `양쪽성(${state.pka.toFixed(1)}/${(state.pka2 || 8.6).toFixed(1)})`,
+        neutral: "중성"
+      };
+      const noteEl = document.getElementById("inp-log-note");
+      const noteVal = noteEl ? noteEl.value.trim() : "";
+
+      logbook.push({
+        name: state.name,
+        mods: activeModNames.join(" + "),
+        mw: state.mw.toFixed(0),
+        logP: state.logP.toFixed(1),
+        tpsa: state.tpsa.toFixed(0),
+        typeLabel: typeMap[state.type],
+        origBcs: origBcs.bcsClass,
+        bcsClass: bcs.bcsClass,
+        bcsBadge: bcs.badgeClass,
+        thick: state.thick,
+        enteric: state.enteric,
+        enhancer: !!state.enhancer,
+        origCapTime: origPk.capValidH.toFixed(1),
+        capTime: pk.capValidH.toFixed(1),
+        irTime: pk.irValidH.toFixed(1),
+        note: noteVal
+      });
+      if (noteEl) noteEl.value = "";
+      saveLogbook();
+      renderLogbook();
+    }
+
+    function exportLogbookCSV() {
+      if (logbook.length === 0) return;
+      const headers = ["번호", "물질명", "적용개질", "MW", "logP", "TPSA", "산염기유형", "원본BCS", "현재BCS", "캡슐두께(um)", "장용성코팅", "투과촉진제", "원본유효시간(h)", "현재유효시간(h)", "속방유효시간(h)", "고찰메모"];
+      const csvCell = (v) => `"${String(v == null ? '' : v).replace(/"/g, '""')}"`;
+      const rows = logbook.map((item, i) => [
+        i + 1, item.name, item.mods || "-", item.mw, item.logP, item.tpsa, item.typeLabel,
+        item.origBcs || "-", item.bcsClass, item.thick, item.enteric ? "ON" : "OFF", item.enhancer ? "ON" : "OFF",
+        item.origCapTime || "-", item.capTime, item.irTime, item.note || ""
+      ].map(csvCell).join(","));
+
+      const csv = "\uFEFF" + [headers.map(csvCell).join(","), ...rows].join("\r\n");
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "신약후보검증_실험기록.csv";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function renderAll() {
+      const mwSlider = document.getElementById("inp-mw");
+      const needMacro = state.mw > 700 || currentPresetKey === "insulin";
+      mwSlider.min = 100;
+      mwSlider.max = needMacro ? 6500 : 700;
+      mwSlider.step = needMacro ? 25 : 5;
+      mwSlider.value = state.mw;
+
+      document.getElementById("inp-logp").value = state.logP;
+      document.getElementById("inp-hbd").value = state.hbd;
+      document.getElementById("inp-hba").value = state.hba;
+      document.getElementById("inp-tpsa").value = state.tpsa;
+      document.getElementById("inp-pka").value = state.pka;
+      document.getElementById("inp-pka2").value = state.pka2 !== undefined ? state.pka2 : 8.6;
+      document.getElementById("inp-logs0").value = state.logS0;
+      document.getElementById("inp-ph").value = state.ph;
+      document.getElementById("inp-thick").value = state.thick;
+      document.getElementById("inp-diff").value = state.diff;
+      document.getElementById("inp-halflife").value = state.halfLife;
+      document.getElementById("inp-dose").value = state.dose;
+
+      renderMoleculePanel();
+      renderSummary();
+      renderTab1();
+      renderTab2();
+      renderTab3();
+      updateMissionUI();
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b.dataset.tab === tabId));
+      document.querySelectorAll(".tab-panel").forEach(p => {
+        if (p.id === tabId) p.classList.add("active");
+        else p.classList.remove("active");
+      });
+    }
+
+    function setUiMode(mode) {
+      uiMode = mode === "advanced" ? "advanced" : "beginner";
+      if (document.body && document.body.classList) {
+        document.body.classList.toggle("mode-beginner", uiMode === "beginner");
+      }
+      document.querySelectorAll("#ui-mode-group .mode-btn").forEach(b => {
+        b.classList.toggle("active", b.dataset.uimode === uiMode);
+      });
+      const showAllBtn = document.getElementById("btn-show-all-presets");
+      if (showAllBtn) {
+        showAllBtn.textContent = uiMode === "beginner"
+          ? "+ 나머지 6종 더 보기 (심화)"
+          : "← 입문 7종으로 간추려 보기";
+      }
+      ["t1-slider-details", "t2-slider-details", "t3-slider-details"].forEach(id => {
+        const d = document.getElementById(id);
+        if (d) d.open = (uiMode === "advanced");
+      });
+      updateMissionUI();
+    }
+
+    function updateMissionUI() {
+      const box = document.getElementById("mission-guide-box");
+      const badge = document.getElementById("mission-progress-badge");
+      if (!box || !badge) return;
+
+      document.querySelectorAll(".mission-btn").forEach(b => {
+        b.classList.toggle("active", b.dataset.mission === activeMission);
+      });
+
+      const bcs = calcBCS(state);
+      const pk = simulatePK(state);
+      const anyMod = Object.values(state.mods || {}).some(Boolean);
+
+      if (activeMission === "warmup") {
+        const s1 = currentPresetKey === "aspirin" && highlightMode !== "all";
+        const s2 = currentPresetKey === "aspirin" && (state.mods.amide || state.stability === "stable");
+        const s3 = pk.capValidH >= 6.0;
+        const doneCnt = [s1, s2, s3].filter(Boolean).length;
+        badge.className = `badge ${doneCnt === 3 ? "pass" : "info"}`;
+        badge.textContent = `맛보기 ${doneCnt}/3 완료`;
+        box.innerHTML = `
+          <div><b>🎯 맛보기 목표:</b> 아스피린으로 버튼 감 잡기 (어디를 눌러야 변하는지 체험해 보세요)</div>
+          <div class="mission-steps">
+            <div class="m-step-item ${s1 ? "done" : ""}">${s1 ? "✅ " : "1️⃣ "}<b>작용기 보기:</b> 구조식 옆 <code>🔵 친수성</code> 또는 <code>🟠 이온화 · 🔴 취약결합</code> 버튼을 눌러 보세요.</div>
+            <div class="m-step-item ${s2 ? "done" : ""}">${s2 ? "✅ " : "2️⃣ "}<b>위산 약점 고치기:</b> <code>에스터 → 아마이드 치환</code>을 눌러 빨간 점선이 파란 실선으로 바뀌는지 보세요.</div>
+            <div class="m-step-item ${s3 ? "done" : ""}">${s3 ? "✅ " : "3️⃣ "}<b>pH·캡슐 구경:</b> 아래 <code>STEP 2</code>(위 vs 소장)와 <code>STEP 3</code>(장용성 코팅) 탭을 차례로 둘러보세요.</div>
+          </div>
+          <div class="mission-sub-actions">
+            <button class="btn" style="padding:3px 9px; font-size:0.75rem;" data-qtab="tab2">STEP 2로 이동 →</button>
+            <button class="btn" style="padding:3px 9px; font-size:0.75rem;" data-qtab="tab3">STEP 3로 이동 →</button>
+          </div>
+        `;
+      } else if (activeMission === "m1") {
+        const isC = currentPresetKey === "candidateC";
+        const s1 = isC;
+        const s2 = isC && (state.mods.amide || state.stability === "stable");
+        const s3 = isC && bcs.bcsClass === "Class I" && pk.capValidH >= 6.0;
+        const doneCnt = [s1, s2, s3].filter(Boolean).length;
+        badge.className = `badge ${doneCnt === 3 ? "pass" : "warn"}`;
+        badge.textContent = `미션 1 · ${doneCnt}/3 완료`;
+        box.innerHTML = `
+          <div><b>🔎 미션 1 (입문):</b> <b>AI 후보 C</b>는 결합력이 좋지만 위산에 쉽게 끊어집니다. 위산에서 버티게 고쳐 보세요!</div>
+          <div class="mission-steps">
+            <div class="m-step-item ${s1 ? "done" : ""}">${s1 ? "✅ " : "1️⃣ "}<b>원인 찾기:</b> 2D 그림의 <b>빨간 점선</b>과 요약 1단계 <code>위험</code> 표시를 확인하세요.</div>
+            <div class="m-step-item ${s2 ? "done" : ""}">${s2 ? "✅ " : "2️⃣ "}<b>치환 버튼 클릭:</b> 위 <code>에스터 → 아마이드 치환</code>을 눌러 위산에 강한 결합으로 바꿔 보세요.</div>
+            <div class="m-step-item ${s3 ? "done" : ""}">${s3 ? "✅ " : "3️⃣ "}<b>캡슐 마무리:</b> <code>STEP 3</code>에서 두께 슬라이더를 권장 최적 두께 근처로 맞춰 유효시간 6h 이상을 만드세요.</div>
+          </div>
+          <div class="mission-sub-actions">
+            <button class="btn" style="padding:3px 9px; font-size:0.75rem;" data-qpreset="candidateC">AI 후보 C 다시 선택</button>
+            <button class="btn" style="padding:3px 9px; font-size:0.75rem;" data-qtab="tab3">STEP 3 캡슐 보기 →</button>
+          </div>
+        `;
+      } else if (activeMission === "m2") {
+        const isAB = currentPresetKey === "candidateA" || currentPresetKey === "candidateB" || currentPresetKey === "candidateE";
+        const s1 = isAB;
+        const s2 = isAB && anyMod;
+        const s3 = isAB && bcs.bcsClass === "Class I";
+        const doneCnt = [s1, s2, s3].filter(Boolean).length;
+        badge.className = `badge ${s3 ? "pass" : "warn"}`;
+        badge.textContent = `미션 2 · ${doneCnt}/3 완료`;
+        box.innerHTML = `
+          <div><b>🧪 미션 2 (핵심):</b> 기름기가 너무 많은 <b>후보 A</b>(물 불용)와 물만 좋아하는 <b>후보 B</b>(막 통과 불가)를 둘 다 <b>BCS Class I</b>으로 고쳐 보세요!</div>
+          <div class="mission-steps">
+            <div class="m-step-item ${s1 ? "done" : ""}">${s1 ? "✅ " : "1️⃣ "}<b>후보 A / B 선택:</b> 아래 버튼으로 후보 A(기름과다)와 B(극성과다)를 차례로 불러오세요.</div>
+            <div class="m-step-item ${s2 ? "done" : ""}">${s2 ? "✅ " : "2️⃣ "}<b>맞춤 튜닝:</b> 후보 A는 <code>사슬 단축 + 이온기</code>, 후보 B는 <code>-OH 메틸화 + 이온기</code>를 눌러 보세요.</div>
+            <div class="m-step-item ${s3 ? "done" : ""}">${s3 ? "✅ " : "3️⃣ "}<b>합격 확인:</b> 요약 2단계가 <b>Class I (합격)</b>으로 바뀌면 실험 기록장에 이유를 적고 저장하세요!</div>
+          </div>
+          <div class="mission-sub-actions">
+            <button class="btn" style="padding:3px 9px; font-size:0.75rem;" data-qpreset="candidateA">AI 후보 A 도전</button>
+            <button class="btn" style="padding:3px 9px; font-size:0.75rem;" data-qpreset="candidateB">AI 후보 B 도전</button>
+            <button class="btn" style="padding:3px 9px; font-size:0.75rem;" data-qtab="tab2">STEP 2 BCS 확인 →</button>
+          </div>
+        `;
+      } else if (activeMission === "m3") {
+        const isInsOrF = currentPresetKey === "insulin" || currentPresetKey === "candidateF";
+        const s1 = isInsOrF;
+        const s2 = currentPresetKey === "insulin" ? (state.enteric && state.enhancer) : (doseMode === "multi3");
+        const s3 = pk.capValidH >= 6.0 && pk.capToxicH < 0.5;
+        const doneCnt = [s1, s2, s3].filter(Boolean).length;
+        badge.className = `badge ${doneCnt === 3 ? "pass" : "purple"}`;
+        badge.textContent = `미션 3 · ${doneCnt}/3 완료`;
+        box.innerHTML = `
+          <div><b>🚀 미션 3 (심화):</b> 주사로만 맞는 거대분자 <b>인슐린</b>을 먹는 약으로 구제하거나, 심화 모드에서 <b>AI 후보 F</b>의 하루 3회 복용을 1회 캡슐로 줄여 보세요!</div>
+          <div class="mission-steps">
+            <div class="m-step-item ${s1 ? "done" : ""}">${s1 ? "✅ " : "1️⃣ "}<b>인슐린(pI 6.4) 관찰:</b> <code>STEP 2</code>에서 등전점 pI=6.4 부근의 <b>U자형 용해도 최저점</b>을 확인하세요.</div>
+            <div class="m-step-item ${s2 ? "done" : ""}">${s2 ? "✅ " : "2️⃣ "}<b>전달체 켜기:</b> <code>STEP 3</code>에서 <code>장용성 코팅</code>과 <code>SNAC/LNP 병용</code>을 모두 체크하세요.</div>
+            <div class="m-step-item ${s3 ? "done" : ""}">${s3 ? "✅ " : "3️⃣ "}<b>유효시간 확인:</b> 파란 곡선이 녹색 안전 띠(1.8~7.5)에 6시간 이상 머무는지 확인해 보세요!</div>
+          </div>
+          <div class="mission-sub-actions">
+            <button class="btn" style="padding:3px 9px; font-size:0.75rem;" data-qpreset="insulin">인슐린 보기</button>
+            <button class="btn" style="padding:3px 9px; font-size:0.75rem;" data-qadv="candidateF">AI 후보 F (심화 모드 열기)</button>
+            <button class="btn" style="padding:3px 9px; font-size:0.75rem;" data-qtab="tab3">STEP 3로 이동 →</button>
+          </div>
+        `;
+      }
+
+      box.querySelectorAll("[data-qtab]").forEach(btn => {
+        btn.addEventListener("click", () => switchTab(btn.dataset.qtab));
+      });
+      box.querySelectorAll("[data-qpreset]").forEach(btn => {
+        btn.addEventListener("click", () => loadPreset(btn.dataset.qpreset));
+      });
+      box.querySelectorAll("[data-qadv]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          setUiMode("advanced");
+          loadPreset(btn.dataset.qadv);
+          switchTab("tab3");
+        });
+      });
+    }
+
+    function selectMission(missionKey) {
+      activeMission = missionKey;
+      if (missionKey === "warmup") {
+        loadPreset("aspirin");
+        switchTab("tab1");
+      } else if (missionKey === "m1") {
+        loadPreset("candidateC");
+        switchTab("tab1");
+      } else if (missionKey === "m2") {
+        loadPreset("candidateA");
+        switchTab("tab1");
+      } else if (missionKey === "m3") {
+        loadPreset("insulin");
+        switchTab("tab3");
+      }
+    }
+
+    function loadPreset(key) {
+      currentPresetKey = key;
+      const p = PRESETS[key];
+      state = {
+        ...p,
+        ph: state.ph,
+        mods: { amide: false, shorten: false, maskPolar: false, addIon: false }
+      };
+      document.querySelectorAll(".preset-btn").forEach(b => b.classList.toggle("active", b.dataset.preset === key));
+      document.getElementById("preset-desc-line").innerHTML = `<b>[${p.name}]</b> ${p.desc}`;
+      renderAll();
+    }
+
+    // ==================== 6. EVENT BINDINGS ====================
+    document.querySelectorAll("#ui-mode-group .mode-btn").forEach(btn => {
+      btn.addEventListener("click", () => setUiMode(btn.dataset.uimode));
+    });
+
+    const showAllPresetsBtn = document.getElementById("btn-show-all-presets");
+    if (showAllPresetsBtn) {
+      showAllPresetsBtn.addEventListener("click", () => {
+        setUiMode(uiMode === "beginner" ? "advanced" : "beginner");
+      });
+    }
+
+    document.querySelectorAll(".mission-btn").forEach(btn => {
+      btn.addEventListener("click", () => selectMission(btn.dataset.mission));
+    });
+
+    const guideBackdrop = document.getElementById("guide-modal-backdrop");
+    const openGuideBtn = document.getElementById("btn-open-guide");
+    const closeGuideBtn = document.getElementById("btn-close-guide");
+    if (openGuideBtn && guideBackdrop) {
+      openGuideBtn.addEventListener("click", () => guideBackdrop.classList.add("open"));
+    }
+    if (closeGuideBtn && guideBackdrop) {
+      closeGuideBtn.addEventListener("click", () => guideBackdrop.classList.remove("open"));
+    }
+    if (guideBackdrop) {
+      guideBackdrop.addEventListener("click", (e) => {
+        if (e.target === guideBackdrop) guideBackdrop.classList.remove("open");
+      });
+    }
+
+    document.querySelectorAll(".q-tip").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const wrap = btn.parentElement;
+        const wasOpen = wrap && wrap.classList && wrap.classList.contains("open");
+        document.querySelectorAll(".tip-wrap.open").forEach(w => w.classList.remove("open"));
+        if (wrap && wrap.classList && !wasOpen) wrap.classList.add("open");
+      });
+    });
+
+    document.querySelectorAll(".hl-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        highlightMode = btn.dataset.hl;
+        renderMoleculePanel();
+        updateMissionUI();
+      });
+    });
+
+    document.querySelectorAll(".mod-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const modKey = btn.dataset.mod;
+        if (btn.disabled || !isModSupported(currentPresetKey, modKey)) return;
+        state.mods[modKey] = !state.mods[modKey];
+        applyModifications(true);
+      });
+    });
+
+    document.getElementById("btn-reset-mods").addEventListener("click", () => {
+      state.mods = { amide: false, shorten: false, maskPolar: false, addIon: false };
+      applyModifications(true);
+    });
+
+    document.querySelectorAll(".preset-btn").forEach(btn => {
+      btn.addEventListener("click", () => loadPreset(btn.dataset.preset));
+    });
+
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => switchTab(btn.dataset.tab));
+    });
+
+    [["inp-mw", "mw"], ["inp-logp", "logP"], ["inp-hbd", "hbd"], ["inp-hba", "hba"], ["inp-tpsa", "tpsa"]].forEach(([id, key]) => {
+      document.getElementById(id).addEventListener("input", (e) => {
+        state[key] = parseFloat(e.target.value);
+        state.logS0 = estimateLogS0(state);
+        renderAll();
+      });
+    });
+
+    document.getElementById("inp-stability").addEventListener("change", (e) => {
+      state.stability = e.target.value;
+      renderAll();
+    });
+
+    document.querySelectorAll("#acid-type-group .seg-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        state.type = btn.dataset.type;
+        if (state.type === "zwitter" && state.pka > (state.pka2 || 8.6)) {
+          state.pka = 4.2;
+          state.pka2 = 8.6;
+        }
+        renderAll();
+      });
+    });
+
+    [["inp-pka", "pka"], ["inp-pka2", "pka2"], ["inp-logs0", "logS0"], ["inp-ph", "ph"]].forEach(([id, key]) => {
+      document.getElementById(id).addEventListener("input", (e) => {
+        state[key] = parseFloat(e.target.value);
+        renderAll();
+      });
+    });
+
+    document.querySelectorAll(".organ-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        state.ph = parseFloat(btn.dataset.ph);
+        renderAll();
+      });
+    });
+
+    document.querySelectorAll("#trap-route-group .route-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        trapRoute = btn.dataset.route;
+        drawIonTrappingDiagram();
+      });
+    });
+
+    document.querySelectorAll("#dose-mode-group .seg-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        doseMode = btn.dataset.dmode;
+        renderSummary();
+        renderTab3();
+        updateMissionUI();
+      });
+    });
+
+    [["inp-thick", "thick"], ["inp-diff", "diff"], ["inp-halflife", "halfLife"], ["inp-dose", "dose"]].forEach(([id, key]) => {
+      document.getElementById(id).addEventListener("input", (e) => {
+        state[key] = parseFloat(e.target.value);
+        renderAll();
+      });
+    });
+
+    document.getElementById("inp-enteric").addEventListener("change", (e) => {
+      state.enteric = e.target.checked;
+      renderAll();
+    });
+
+    document.getElementById("inp-enhancer").addEventListener("change", (e) => {
+      state.enhancer = e.target.checked;
+      renderAll();
+    });
+
+    document.getElementById("btn-reset").addEventListener("click", () => loadPreset(currentPresetKey));
+    document.getElementById("btn-log").addEventListener("click", addLogEntry);
+    document.getElementById("btn-log-inline").addEventListener("click", addLogEntry);
+    document.getElementById("btn-export-csv").addEventListener("click", exportLogbookCSV);
+
+    document.getElementById("btn-clear-log").addEventListener("click", () => {
+      logbook = [];
+      saveLogbook();
+      renderLogbook();
+    });
+
+    document.getElementById("btn-print").addEventListener("click", () => {
+      window.print();
+    });
+
+    // Init
+    loadSavedLogbook();
+    renderLogbook();
+    setUiMode("beginner");
+    selectMission("warmup");
+  </script>
+</body>
+</html>
