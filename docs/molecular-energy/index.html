@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>온도와 기체 분자의 운동 에너지 분포</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f5f6f2;color:#18352f;font:17px/1.5 "Malgun Gothic",sans-serif;word-break:keep-all}main{max-width:1360px;margin:auto;padding:clamp(16px,2vw,30px) 16px}header small{font-weight:700;color:#4c695f}h1{margin:4px 0;font-size:clamp(29px,4vw,46px);letter-spacing:-.06em;line-height:1.25}p{margin:0}.sheet,.controls{border:1px solid #cad8d0;background:white;border-radius:14px}.sheet{overflow:hidden;margin:16px 0 10px}.legend,.controls,.results{display:flex;gap:15px;align-items:center;flex-wrap:wrap}.legend{justify-content:space-between;padding:10px 18px;background:#edf4ef;font-weight:700}.keys{display:flex;gap:16px;flex-wrap:wrap}.cool{color:#b3451c}.warm{color:#195da4}.keys span:before{content:"";display:inline-block;margin-right:6px;vertical-align:middle;width:26px;border-top:4px solid currentColor}.keys .cool:before{border-top-style:dashed}.plot{padding:5px 10px}svg{display:block;width:100%;height:clamp(265px,32vw,360px)}svg text{font-family:inherit;fill:#304c47}.tick{font-size:14px}.axis,.region{font-size:clamp(13px,1.6vw,21px);font-weight:700}.results{border-top:1px solid #d7e1d8;padding:12px 18px;align-items:stretch}.results h2{margin:0;align-self:center;font-size:clamp(17px,2vw,25px)}.result{flex:1;min-width:130px;border-left:2px solid #d6dfd7;padding-left:16px}.result b{font-size:clamp(19px,2.3vw,29px)}.result small{display:block;font-weight:700}.controls{padding:13px 18px}.controls label{font-weight:bold}.controls output{color:#195da4}.controls input{flex:1;min-width:110px;accent-color:#246db3}.controls button{font:inherit;font-weight:700;color:white;background:#185b4c;border:0;border-radius:7px;padding:10px 16px;cursor:pointer}button:focus-visible,input:focus-visible{outline:3px solid #c87b21;outline-offset:3px}.note{margin-top:10px;color:#4d655c;font-size:14px}@media(max-width:600px){main{padding:16px 9px}body{font-size:15px}.plot{padding:3px}.legend,.controls,.results{padding:10px;gap:8px}.keys{gap:8px}.keys span:before{width:15px}.results h2{flex-basis:100%}.result{padding-left:8px;min-width:110px}.controls button{width:100%}.tick{font-size:12px}}
+.legend{font-size:clamp(16px,1.65vw,23px)}.tick{font-size:clamp(15px,1.65vw,23px);font-weight:650}.region,.axis{font-size:clamp(17px,2.15vw,30px);font-weight:750}
+svg{height:clamp(310px,39vh,450px)}.results{display:grid;grid-template-columns:1fr 1fr 1.16fr;align-items:center;gap:6px 22px}.results h2{grid-column:1/-1;font-size:clamp(17px,1.8vw,24px)}.result{min-width:0}.result small{font-size:clamp(15px,1.6vw,21px)}.result b{font-size:clamp(20px,2.25vw,32px)}.gain{border:0;padding:6px 16px;background:#e9f2ff;border-radius:8px;color:#143f77}.gain b{font-size:clamp(30px,3.3vw,46px);line-height:1.14;font-variant-numeric:tabular-nums}
+@media(max-width:680px){.results{grid-template-columns:1fr 1fr;gap:8px}.gain{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;padding:8px 12px}.result b{line-height:1.25}.gain b{font-size:30px}}
+</style><style>
+[hidden]{display:none!important}
+.lesson-nav{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 14px}
+.lesson-nav a{display:inline-block;padding:8px 13px;text-decoration:none;color:#345349;font-weight:700;border:1px solid #b8c9c2;border-radius:6px;background:white}
+.lesson-nav a[aria-current="page"]{background:#174f42;color:white;border-color:#174f42}
+.lesson-nav a:focus-visible{outline:3px solid #b66b20;outline-offset:2px}
+
+.advanced-controls{margin-top:12px;padding:12px 16px;background:white;border:1px solid #c6d3c9;border-radius:9px}
+.advanced-controls label{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:8px 0}
+.advanced-controls input{flex:1;min-width:110px}
+.advanced-controls output{min-width:6em;font-weight:bold}
+.advanced-controls button{font:inherit;padding:6px 10px;background:white;color:#245849;border:1px solid #adc4b9;border-radius:5px;cursor:pointer}
+details{margin-top:10px}summary{cursor:pointer;font-weight:bold}
+</style></head><body><main>
+<header><small>물질과 에너지 · 반응 속도</small><h1>온도와 기체 분자의 운동 에너지 분포</h1><p>온도를 올리면서 활성화 에너지 기준선 오른쪽의 빗금 면적을 비교해 보세요.</p></header><nav class="lesson-nav" aria-label="탐구 모드"><a href="#temperature">온도만 바꾸기</a><a href="#compare">조건 바꿔 비교하기</a></nav>
+<section class="sheet"><div class="legend"><div class="keys"><span class="cool" id="coldLabel">기준 T₁ · 300 K</span><span class="warm" id="hotLabel"></span></div><span>각각 입자 1,000개</span></div>
+<div class="plot"><svg id="graph" role="img" aria-labelledby="desc"><title id="desc"></title><defs>
+<pattern id="blue" width="18" height="18" patternUnits="userSpaceOnUse"><rect width="18" height="18" fill="#d2e7ff"/><path d="M-4 4 L4 -4 M-4 22 L22 -4 M14 22 L22 14" stroke="#2268ae" stroke-width="5"/></pattern>
+<pattern id="orange" width="15" height="15" patternUnits="userSpaceOnUse"><rect width="15" height="15" fill="#ffdfb9"/><path d="M-4 11 L4 19 M-4 -4 L19 19 M11 -4 L19 4" stroke="#aa4217" stroke-width="4"/></pattern>
+</defs><g id="grid"></g><g id="curves"></g><g id="labels"></g></svg></div>
+<div class="results"><h2>활성화 에너지 이상인 입자 · 1,000개 중</h2>
+<div class="result cool"><small id="coldCaption">T₁ · 300 K</small><b id="coldCount"></b></div><div class="result warm"><small id="hotCaption"></small><b id="hotCount"></b></div><div class="result gain"><small id="gainLabel">300 K 대비 증가</small><b id="gain"></b></div></div></section>
+<div class="controls"><label for="temp">비교 온도 T₂　<output id="value" for="temp"></output></label><input id="temp" type="range" min="300" max="750" step="10" value="600"><button id="play">▶ 온도 올리기</button></div>
+<section id="advanced" class="advanced-controls" aria-label="심화 탐구 조건" hidden>
+<label for="base">기준 온도 T₁ <output id="baseValue" for="base"></output><input id="base" type="range" min="180" max="390" step="5" value="300"></label>
+<label for="barrier">활성화 에너지 Eₐ <output id="barrierValue" for="barrier"></output><input id="barrier" type="range" min="4" max="14" step="0.5" value="9"></label>
+<p>같은 반응에서 온도만 바꿀 때는 Eₐ가 일정합니다. 여기서 Eₐ를 바꾸면 장벽이 다른 조건을 비교합니다.</p>
+<p id="ratio"></p><button id="defaults" type="button">조건 초기화</button> <button id="download" type="button">그래프 SVG 저장</button>
+<details><summary>분포 곡선 읽기</summary><p>같은 수의 입자를 비교하므로 두 곡선의 전체 면적은 같습니다. 온도가 높아지면 봉우리가 오른쪽으로 이동하고 낮아지며, 평균 운동 에너지도 증가합니다.</p></details></section>
+<p class="note">두 곡선 아래의 전체 면적은 같습니다. 입자 수는 기체의 운동 에너지 분포에서 구한 예상값이며, 그래프 오른쪽 너머의 입자도 포함합니다. 기준 이상의 에너지를 가진 입자가 적절한 방향으로 충돌하면 반응할 수 있습니다.</p>
+</main><script>
+const $=id=>document.getElementById(id);
+let cold=300,threshold=9;
+const limit=25,R=.008314462618,total=1000;
+const chart=$('graph'),slider=$('temp'),button=$('play');
+let timer=0;
+// Maxwell–Boltzmann translational energy distribution; energy in kJ/mol.
+function density(e,T){
+  const scale=R*T;
+  return total*2/Math.sqrt(Math.PI)*Math.sqrt(e)*Math.exp(-e/scale)/scale**1.5;
+}
+function eligible(T){
+  // Integrate the smooth speed-coordinate density up to the threshold.
+  const n=96,h=Math.sqrt(threshold/(R*T))/n;
+  let sum=0;
+  for(let i=0;i<=n;i++){
+    const u=i*h,weight=(i===0||i===n)?1:(i%2?4:2);
+    sum+=weight*u*u*Math.exp(-u*u);
+  }
+  return 1-4/Math.sqrt(Math.PI)*h*sum/3;
+}
+function el(parent,tag,attrs,content){
+  const node=document.createElementNS('http://www.w3.org/2000/svg',tag);
+  for(const [k,v] of Object.entries(attrs))node.setAttribute(k,v);
+  if(content!==undefined)node.textContent=content;
+  parent.append(node);return node;
+}
+function graph(){
+  const T=Number(slider.value),w=chart.clientWidth,h=chart.clientHeight;
+  const left=w<500?38:59,right=w-(w<500?16:25),bottom=h-(w<500?53:68),top=w<500?61:70;
+  const ceiling=Math.max(210,Math.ceil(density(R*cold/2,cold)/100)*100);
+  const x=e=>left+(right-left)*e/limit,y=d=>bottom-(bottom-top-10)*d/ceiling;
+  chart.setAttribute('viewBox','0 0 '+w+' '+h);
+  const grid=$('grid'),curves=$('curves'),labels=$('labels');
+  for(const group of [grid,curves,labels])group.replaceChildren();
+  function txt(x,y,value,cls='tick',anchor='middle'){
+    return el(labels,'text',{x,y,class:cls,'text-anchor':anchor},value);
+  }
+  for(let d=0;d<=ceiling;d+=100){
+    el(grid,'line',{x1:left,y1:y(d),x2:right,y2:y(d),stroke:'#e2ebe6'});
+    txt(left-5,y(d)+4,d,'tick','end');
+  }
+  el(grid,'path',{d:'M'+left+' '+(top-5)+'V'+bottom+'H'+right,fill:'none',stroke:'#71877b','stroke-width':1.6});
+  for(const e of [0,5,10,15,20,25])txt(x(e),bottom+(w<500?19:27),e);
+  txt(left,w<500?22:32,'단위 에너지당 입자 수','axis','start');
+  txt(right,h-3,'운동 에너지 (kJ/mol)','axis','end');
+  function path(T,start){
+    let d='';
+    for(let i=0;i<=360;i++){
+      const e=start+(limit-start)*(i/360)**2;
+      d+=(i?'L':'M')+x(e).toFixed(2)+' '+y(density(e,T)).toFixed(2)+' ';
+    }
+    return d;
+  }
+  for(const [temperature,pattern] of [[T,'blue'],[cold,'orange']]){
+    const d=path(temperature,threshold)+' L'+right+' '+bottom+' H'+x(threshold)+' Z';
+    el(curves,'path',{d,fill:'url(#'+pattern+')'});
+  }
+  el(curves,'path',{d:path(T,0),stroke:'#2165a9','stroke-width':4.8,fill:'none'});
+  el(curves,'path',{d:path(cold,0),stroke:'#be4d21','stroke-width':4.3,'stroke-dasharray':'11 6',fill:'none'});
+  el(labels,'line',{x1:x(threshold),y1:top-10,x2:x(threshold),y2:bottom,stroke:'#353d40','stroke-width':3,'stroke-dasharray':'8 5'});
+  txt(x(threshold)+7,top-6,w<550?'Eₐ = '+threshold:'활성화 에너지 Eₐ = '+threshold+' kJ/mol','region','start');
+  const labelX=(x(threshold)+right)/2;
+  txt(labelX,top+41,'E ≥ Eₐ','region');
+  const key=txt(labelX,top+70,'파란 빗금 · T₂ 분포','tick');
+  key.style.fill='#195da4';
+  const format=T=>{
+    const fraction=eligible(T);
+    return '약 '+Math.round(total*fraction)+'개 ('+(100*fraction).toFixed(1)+'%)';
+  };
+  $('baseValue').value=cold+' K';
+  $('barrierValue').value=threshold+' kJ/mol';
+  $('coldLabel').textContent='기준 T₁ · '+cold+' K';
+  $('coldCaption').textContent='T₁ · '+cold+' K';
+  $('gainLabel').textContent=cold+' K 대비 증가';
+  $('ratio').textContent='기준선 이상인 입자의 분율은 기준 온도에서의 '+(eligible(T)/eligible(cold)).toFixed(2)+'배입니다.';
+  $('value').value=T+' K';$('hotLabel').textContent='비교 T₂ · '+T+' K';
+  $('hotCaption').textContent='T₂ · '+T+' K';$('coldCount').textContent=format(cold);$('hotCount').textContent=format(T);
+  const increase=Math.round(total*eligible(T))-Math.round(total*eligible(cold));
+  $('gain').textContent=increase?'약 +'+increase+'개':'0개';
+  $('desc').textContent='활성화 에너지 이상인 입자가 1,000개 중 '+cold+' K에서 '+format(cold)+', '+T+' K에서 '+format(T)+'입니다.';
+}
+function stop(){clearInterval(timer);timer=0;button.textContent=Number(slider.value)===750?'↻ 다시 올리기':'▶ 온도 올리기'}
+slider.addEventListener('input',()=>{stop();graph()});
+button.addEventListener('click',()=>{
+  if(timer){stop();return}
+  if(Number(slider.value)>=750)slider.value=slider.min;
+  graph();button.textContent='Ⅱ 일시 정지';
+  timer=setInterval(()=>{
+    slider.value=Number(slider.value)+10;graph();
+    if(Number(slider.value)>=750)stop();
+  },180);
+});
+function applyConditions(){
+  stop();
+  const advanced=location.hash==='#compare';
+  cold=advanced?Number($('base').value):300;
+  threshold=advanced?Number($('barrier').value):9;
+  slider.min=advanced?Math.max(300,cold):300;
+  slider.step=advanced?5:10;
+  slider.value=Math.max(Number(slider.min),Number(slider.value));
+  $('advanced').hidden=!advanced;
+  for(const link of document.querySelectorAll('.lesson-nav a')){
+    if(link.hash===(advanced?'#compare':'#temperature')) link.setAttribute('aria-current','page');
+    else link.removeAttribute('aria-current');
+  }
+  graph();
+}
+for(const id of ['base','barrier']) $(id).addEventListener('input',applyConditions);
+$('defaults').addEventListener('click',()=>{
+  $('base').value=300; $('barrier').value=9; slider.value=600; applyConditions();
+});
+$('download').addEventListener('click',()=>{
+  const svg=chart.cloneNode(true);
+  svg.setAttribute('xmlns','http://www.w3.org/2000/svg');
+  svg.setAttribute('width',chart.clientWidth);
+  svg.setAttribute('height',chart.clientHeight);
+  const labels=chart.querySelectorAll('text');
+  svg.querySelectorAll('text').forEach((label,i)=>{
+    const css=getComputedStyle(labels[i]);
+    for(const prop of ['font-family','font-size','font-weight','fill']) label.style.setProperty(prop,css.getPropertyValue(prop));
+  });
+  const blob=new Blob([new XMLSerializer().serializeToString(svg)],{type:'image/svg+xml'});
+  const url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download='운동-에너지-분포.svg';a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+});
+window.addEventListener('hashchange',applyConditions);
+applyConditions();new ResizeObserver(graph).observe(chart);
+</script></body></html>

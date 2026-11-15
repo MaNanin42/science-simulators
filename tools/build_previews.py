@@ -26,6 +26,8 @@ try:
             relative = file.relative_to(docs).as_posix()
             if file.is_symlink() or relative == "index.html" or relative.startswith("preview-renderer/"):
                 continue
+            if re.search(r'<meta\s+http-equiv=["\']refresh["\']', file.read_text("utf-8"), re.I):
+                continue
             context = browser.new_context(viewport={"width":1136,"height":710}, reduced_motion="reduce", service_workers="block")
             try:
                 def restrict(route):
