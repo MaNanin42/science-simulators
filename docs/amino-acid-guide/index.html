@@ -20,7 +20,9 @@ figure{display:flex;flex-direction:column;min-width:0;padding:clamp(13px,1.5vw,2
 @media(max-width:760px){.mast{min-height:52px}.mast p{font-size:14px}main{display:block;padding-top:12px}.index{border:0;padding:0;margin-bottom:12px}.index-title h2,.index-title .total{display:none}.mobile-toggle{display:flex;align-items:center;justify-content:space-between;width:100%;font-weight:650;padding:8px 11px}.mobile-toggle:after{content:"▾"}.mobile-toggle[aria-expanded=true]:after{content:"▴"}.index:not(.expanded) .picker{display:none}.picker{padding:3px 0 10px}.entry{min-height:42px}.group+.group{margin-top:9px}.overview{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.identity{padding:14px}.identity h2{font-size:clamp(28px,6vw,40px)}.class-line{font-size:13px;gap:6px}.class-line span+span{padding-left:6px}.symbols{font-size:14px}.chem>div{display:block;padding:3px 0}.chem dt{font-size:13px}.chem dd{font-size:17px}.chem{margin-top:10px;padding-top:5px}figure{padding:10px}.figure-head{flex-wrap:wrap;gap:2px}.figure-head strong{font-size:16px}.figure-head a{font-size:12px}.formula-image{height:160px}.section-title{font-size:19px}.notes p{font-size:18px}.fact-list>div{grid-template-columns:5em minmax(0,1fr);gap:8px}.fact-list dt{font-size:15px}.fact-list dd{font-size:16px}}
 @media(max-width:370px){.identity{padding:10px}.entry{font-size:15px}.class-line{display:block}.class-line span{display:block}.class-line span+span{border:0;padding:0}}
 @media (min-width:761px){
-  .formula-image{flex:0 0 auto;height:clamp(190px,26vh,270px)}
+  .overview{grid-template-columns:minmax(0,.88fr) minmax(0,1.12fr)}
+  figure{padding:12px 14px}
+  .formula-image{flex:0 0 auto;height:clamp(245px,37vh,420px)}
   .entry span{word-break:keep-all}
 }
 @media (min-width:761px) and (max-height:800px){
@@ -39,7 +41,11 @@ figure{display:flex;flex-direction:column;min-width:0;padding:clamp(13px,1.5vw,2
   .english{grid-column:1;grid-row:3;margin:0}
   .symbols{grid-column:1;grid-row:4;margin:0}
   .chem{grid-column:2;grid-row:2/5;border-top:0;border-left:1px solid #a6bdb0;padding:0 0 0 12px;margin:0}
-  figure{padding:8px 14px}.formula-image{flex:0 0 auto;height:clamp(156px,23vh,206px);margin-top:2px}
+  figure{padding:8px}.formula-image{flex:0 0 auto;height:clamp(205px,32vh,310px);margin-top:2px}
+}
+@media (min-width:541px) and (max-width:760px){
+  .overview{grid-template-columns:minmax(0,.84fr) minmax(0,1.16fr)}
+  .formula-image{max-height:70vh}
 }
 </style>
 </head>
@@ -94,7 +100,10 @@ function showProfile(a){
   find('source').href='https://pubchem.ncbi.nlm.nih.gov/compound/'+a.cid;
   write('image-title',a.name+' 분자 구조식');
   const graphic=document.querySelector('.formula-image');
-  graphic.setAttribute('viewBox',a.viewBox);
+  // Keep a small margin around the original bonds and atom labels.
+  const [x,y,width,height]=a.viewBox.split(' ').map(Number);
+  const inset=8;
+  graphic.setAttribute('viewBox',[x+inset,y+inset,width-2*inset,height-2*inset].join(' '));
   graphic.querySelector('image').setAttribute('href',a.image);
   for(const btn of find('groups').querySelectorAll('button'))btn.setAttribute('aria-pressed',String(btn.dataset.id===a.id));
 }
