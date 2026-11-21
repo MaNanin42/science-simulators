@@ -46,6 +46,8 @@ def capture(browser, origin, relative):
         if not response.ok or page.locator("input[type=password]").count() or private.search(page.locator("body").inner_text()):
             return None
         page.evaluate("() => document.fonts.ready")
+        if relative == "cox2-drug-action/index.html":
+            page.wait_for_function("() => typeof ready !== 'undefined' && ready", timeout=60000)
         image = Image.open(io.BytesIO(page.screenshot(animations="disabled"))).convert("RGB")
         image.thumbnail((864, 540), Image.Resampling.LANCZOS)
         blob = io.BytesIO()
@@ -79,7 +81,8 @@ def site_inputs():
 manifest = {}
 with sync_playwright() as pw:
     browser = pw.chromium.launch(executable_path=os.environ.get("CHROME_BIN") or shutil.which("google-chrome"),
-                                 args=["--disable-dev-shm-usage"])
+                                 args=["--disable-dev-shm-usage", "--use-angle=swiftshader",
+                                       "--enable-unsafe-swiftshader"])
     # Missing glyphs draw the same box. Check the browser's pixels before publishing any screenshots.
     probe = browser.new_page(locale="ko-KR")
     readable = probe.evaluate("""() => {
